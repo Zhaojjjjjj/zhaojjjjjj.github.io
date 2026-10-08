@@ -212,7 +212,7 @@ a{color:var(--accent-ink);text-decoration:none}
 (function(){
   // Remove Gmeek backdate config line rendered as a paragraph: ##{"timestamp":...}
   try{
-    var mb=document.querySelector('.markdown-body');
+    var mb=document.querySelector('.article-body');
     if(mb){var ps=mb.querySelectorAll('p');
       for(var i=0;i<ps.length;i++){
         if(/^##\{"timestamp":\d+/.test(ps[i].textContent.trim())){ps[i].remove();}

@@ -226,7 +226,7 @@ npm version major    // 大改动，不向下兼容，版本号第一位数加1
 (function(){
   // Remove Gmeek backdate config line rendered as a paragraph: ##{"timestamp":...}
   try{
-    var mb=document.querySelector('.markdown-body');
+    var mb=document.querySelector('.article-body');
     if(mb){var ps=mb.querySelectorAll('p');
       for(var i=0;i<ps.length;i++){
         if(/^##\{"timestamp":\d+/.test(ps[i].textContent.trim())){ps[i].remove();}
