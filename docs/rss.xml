@@ -1,0 +1,1426 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>zhaojjjjjj</title><link>https://zhaojjjjjj.github.io</link><description>个人技术博客</description><copyright>zhaojjjjjj</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://avatars.githubusercontent.com/u/102017381?v=4</url><title>avatar</title><link>https://zhaojjjjjj.github.io</link></image><lastBuildDate>Thu, 08 Oct 2026 02:26:28 +0000</lastBuildDate><managingEditor>zhaojjjjjj</managingEditor><ttl>60</ttl><webMaster>zhaojjjjjj</webMaster><item><title>JS - About object fun 🌍</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20About%20object%20fun%20%F0%9F%8C%8D.html</link><description>#### 详细功能
+
+- **`Object.keys(obj)`**：
+  - **定义**：返回对象自身可枚举属性的键名数组。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20About%20object%20fun%20%F0%9F%8C%8D.html</guid><pubDate>Sat, 01 Mar 2025 02:46:01 +0000</pubDate></item><item><title>Vue - uview 上传照片时加水印 🎩</title><link>https://zhaojjjjjj.github.io/post/Vue%20-%20uview%20-shang-chuan-zhao-pian-shi-jia-shui-yin-%20%F0%9F%8E%A9.html</link><description>```
+&lt;template&gt;
+	&lt;u--form labelPosition='left' labelWidth='100' :model='form' :rules='rules' ref='uForm' errorType='border-bottom'&gt;
+		&lt;u-form-item label='附件' prop='enclosureList' borderBottom&gt;
+			&lt;u-upload :fileList='fileList1' @afterRead='afterRead' @delete='deletePic' name='1' multiple :maxCount='10' :disabled='disabled' :deletable='!disabled'&gt;&lt;/u-upload&gt;
+		&lt;/u-form-item&gt;		
+	&lt;/u--form&gt;
+
+	&lt;view style='width: 0px; height: 0px; overflow: hidden'&gt;
+		&lt;canvas canvas-id='cid' :style='{ height: `${cvHeight}px`, width: `${cvWidth}px` }'&gt;&lt;/canvas&gt;
+        &lt;/view&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { options } from '@/http/config.js';
+import { clientId, clientSecret } from '@/common/setting';
+import { Base64 } from '@/utils/base64.js';
+import { bfAdd, glsjSelect, nbpfrSelect, bfDetail } from '@/api/business.js';
+
+export default {
+	data() {
+		return {
+			form: {
+				enclosureList: [],
+			},
+			beforeAction: options.baseURL + '/api/web-service/oss/endpoint/put-file',
+			token: {
+				'Blade-Auth': uni.getStorageSync('accessToken'),
+				Authorization: 'Basic ' + Base64.encode(clientId + ':' + clientSecret),
+			},
+			disabled: false,
+			fileList1: [],
+
+			cvHeight: 0,
+			cvWidth: 1024,
+			waterMarkerAddress: '',
+		};
+	},
+
+		// upload
+		async afterRead(event) {
+			let lists = [].concat(event.file);
+			let Images = [];
+
+			for (let i = 0; i &lt; lists.length; i++) {
+				const item = lists[i];
+				Images.push(item);
+			}
+
+			let fileListLen = this.fileList1.length;
+
+			// 将状态设置为上传中
+			Images.forEach((item) =&gt; {
+				this.fileList1.push({
+					...item,
+					status: 'uploading',
+					message: '上传中',
+				});
+			});
+
+			for (const image of Images) {
+				const tpurl = image.url; // 使用Images数组
+
+				const imageInfo = await this.getImageInfo(tpurl);
+				this.cvWidth = 1024;
+				this.cvHeight = (this.cvWidth * imageInfo.height) / imageInfo.width;
+				// 使用当前图像的信息来绘制
+				await this.imgToCanvas(tpurl, this.cvWidth, this.cvHeight, fileListLen);
+				fileListLen++; // 更新文件列表索引
+			}
+		},
+
+		getImageInfo(url) {
+			return new Promise((resolve, reject) =&gt; {
+				uni.getImageInfo({
+					src: url,
+					success: resolve,
+					fail: reject,
+				});
+			});
+		},
+
+		async imgToCanvas(url, width, height, fileListLen) {
+			const nowDate = new Date();
+			const year = nowDate.getFullYear();
+			const month = String(nowDate.getMonth() + 1).padStart(2, '0');
+			const day = String(nowDate.getDate()).padStart(2, '0');
+			const week = String(nowDate.getDay());
+			const hour = String(nowDate.getHours()).padStart(2, '0');
+			const minute = String(nowDate.getMinutes()).padStart(2, '0');
+
+			return new Promise(async (resolve) =&gt; {
+				const ctx = uni.createCanvasContext('cid');
+
+				// // 清空画布
+				// ctx.clearRect(0, 0, width, height);
+
+				// 绘制原始图像
+				ctx.drawImage(url, 0, 0, width, height);
+
+				// // 绘制水印图片
+				// const watermarkImage = await this.loadImage('./../../static/images/logo.jpg');
+				// const watermarkWidth = 150;
+				// const watermarkHeight = 150;
+				// const watermarkX = width - 170; // 水印图片在 Canvas 上的 x 坐标
+				// const watermarkY = height - 200; // 水印图片在 Canvas 上的 y 坐标
+				// ctx.drawImage(watermarkImage, watermarkX, watermarkY, watermarkWidth, watermarkHeight);
+
+				// 绘制文字水印
+				ctx.fillStyle = '#ddd';
+				ctx.fillRect(20, height - 210, 6, 200);
+				ctx.font = '40px Arial';
+				ctx.fillText(`${hour}:${minute}`, 35, height - 90); // 时分
+				ctx.fillText(`${year}.${month}.${day}`, 35, height - 130);
+				ctx.fillText(uni.getStorageSync('lifeData').userInfo.real_name, 35, height - 170);
+
+				ctx.fillText(this.waterMarkerAddress, 35, height - 20);
+
+				ctx.draw();
+
+				setTimeout(() =&gt; {
+					uni.canvasToTempFilePath(
+						{
+							canvasId: 'cid',
+							width: width,
+							height: height,
+							destWidth: width,
+							destHeight: height,
+							success: async (res) =&gt; {
+								resolve(res.tempFilePath);
+								await this.setFilePath(res.tempFilePath, fileListLen);
+								ctx.clearRect(0, 0, width, height);
+								ctx.draw();
+							},
+						},
+						this,
+					);
+				}, 100);
+			});
+		},
+		async loadImage(url) {
+			return new Promise((resolve, reject) =&gt; {
+				uni.getImageInfo({
+					src: url,
+					success: (res) =&gt; {
+						resolve(res.path);
+					},
+					fail: (err) =&gt; {
+						reject(err);
+					},
+				});
+			});
+		},
+		uploadFilePromise(url) {
+			return new Promise((resolve, reject) =&gt; {
+				uni.uploadFile({
+					url: `${options.baseURL}/api/web-service/oss/endpoint/put-file`,
+					filePath: url,
+					name: 'file',
+					header: {
+						'Blade-Auth': uni.getStorageSync('accessToken'),
+						Authorization: 'Basic ' + Base64.encode(clientId + ':' + clientSecret),
+					},
+					success: (res) =&gt; {
+						let data = JSON.parse(res.data);
+						resolve(data.data.link);
+					},
+				});
+			});
+		},
+		async setFilePath(path, fileListLen) {
+			const result = await this.uploadFilePromise(path);
+
+			let item = this.fileList1[fileListLen];
+			this.fileList1.splice(
+				fileListLen,
+				1,
+				Object.assign(item, {
+					status: 'success',
+					message: !result ? '上传失败' : '',
+					url: result,
+				}),
+			);
+		},
+
+		// del img
+		deletePic(event) {
+			this.fileList1.splice(event.index, 1);
+		},
+
+		getWaterMarkerAddress() {
+			const key = '4198af3b4995df4cd919d17dcfcfb410';
+
+			uni.request({
+				url: 'https://restapi.amap.com/v3/ip?key=' + key, // IP定位接口
+				method: 'GET',
+				success: (res) =&gt; {
+					if (res.data.status === '1') {
+						const city = res.data.city; // 获取城市信息
+						const province = res.data.province; // 获取省份信息
+						this.waterMarkerAddress = `${province}${city}`; // 地址信息
+					}
+				},
+				fail: (error) =&gt; {
+					console.error('请求失败：', error);
+				},
+			});
+		},
+	},
+};
+&lt;/script&gt;
+
+```
+
+。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue%20-%20uview%20-shang-chuan-zhao-pian-shi-jia-shui-yin-%20%F0%9F%8E%A9.html</guid><pubDate>Thu, 06 Feb 2025 06:53:48 +0000</pubDate></item><item><title>Vue3 - Init 🍭</title><link>https://zhaojjjjjj.github.io/post/Vue3%20-%20Init%20%F0%9F%8D%AD.html</link><description>- 自动引入 ref reactive...
+- npm i unplugin-auto-import -D
+```
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import AutoImport from 'unplugin-auto-import/vite';
+ 
+export default defineConfig({
+  plugins: [
+    vue(),
+    AutoImport({
+      // 自动导入 Vue 相关函数，如：ref, reactive ...
+      imports: ['vue', 'vue-router'],
+    }),
+  ],
+});
+```
+
+
+- 使用$ref()
+- npm i -D unplugin-vue-macros
+```
+import vue from '@vitejs/plugin-vue';
+import AutoImport from 'unplugin-auto-import/vite';
+import VueMacros from 'unplugin-vue-macros/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+    plugins: [
+        AutoImport({
+            imports: ['vue', 'vue-router'],
+        }),
+        VueMacros({
+            plugins: {
+                vue: vue(),
+            },
+        }),
+    ],
+});
+```
+
+
+- prettier自动排列 Tailwind 的类名顺序
+- npm install -D prettier prettier-plugin-tailwindcss
+```
+// .prettierrc
+{
+  'plugins': ['prettier-plugin-tailwindcss']
+}
+```
+
+
+- 配置 import 的自动排列
+- npm install --save-dev @trivago/prettier-plugin-sort-imports
+```
+.prettierrc
+{
+    'printWidth': 400,
+    'tabWidth': 4,
+    'useTabs': false,
+    'semi': true,
+    'bracketSameLine': true,
+    'quoteProps': 'preserve',
+    'trailingComma': 'all',
+    'singleQuote': true,
+    'importOrderSeparation': true,
+    'importOrderSortSpecifiers': true,
+    'plugins': ['@trivago/prettier-plugin-sort-imports'],
+    'importOrder': ['^@core/(.*)$', '&lt;THIRD_PARTY_MODULES&gt;', '^@ui/(.*)$', '^[./]']
+}
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue3%20-%20Init%20%F0%9F%8D%AD.html</guid><pubDate>Thu, 06 Feb 2025 06:35:27 +0000</pubDate></item><item><title>Utilities 🍟</title><link>https://zhaojjjjjj.github.io/post/Utilities%20%F0%9F%8D%9F.html</link><description>```
+// MySQL 严格模式
+SET GLOBAL sql_mode='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+
+// composer
+composer install --ignore-platform-reqs
+// 官方镜像源
+sudo composer config -g repo.packagist composer https://packagist.org
+// 阿里云镜像
+sudo composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
+
+
+// natapp
+// 到 natapp 文件夹内跑以下两个命令
+chmod a+x natapp  
+./natapp -authtoken=********(your token)
+
+
+// Python 查看当下 conda 所处的环境及切换环境
+// 查看
+conda env list
+// 切换
+conda activate &lt;your_env_name&gt;
+
+
+// PHP本地版本切换
+// brew-php-switcher 是通过 brew 安装的，安装方式如下：
+brew install brew-php-switcher
+// 使用方式：
+brew-php-switcher &lt;version&gt;  /  brew-php-switcher &lt;version&gt; -s
+// 例如
+brew-php-switcher 5.6 -s
+
+
+// 宝塔链接仓库
+git clone sshxxxxx .
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Utilities%20%F0%9F%8D%9F.html</guid><pubDate>Thu, 06 Feb 2025 06:27:59 +0000</pubDate></item><item><title>JS - 企业微信内嵌H5登录流程 🫤</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20-qi-ye-wei-xin-nei-qian-H5-deng-lu-liu-cheng-%20%F0%9F%AB%A4.html</link><description>1. 企业微信应用管理配置入口路径  `` 域名/pages/login/entryActive?channelCode=50007``
+2. 在``/pages/login/entryActive``页面中请求
+
+```
+onLoad(options) {
+		let channelCode = '';
+		if (options.channelCode) {
+			channelCode = options.channelCode;
+		} else {
+			channelCode = uni.getStorageSync('channelCode');
+		}
+
+		if (channelCode) {
+			getChannelCode({ channelCode }).then((res) =&gt; {
+				uni.setStorageSync('channelCode', channelCode);
+				uni.setStorageSync('tenantId', res.data.tenantId);
+
+				const redirectUrl = res.data.redirectUrl;
+
+				const authRedirect = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${res.data.corpId}` + `&amp;redirect_uri=${encodeURIComponent(redirectUrl)}&amp;response_type=code&amp;state=wxlogin` + `&amp;scope=snsapi_privateinfo&amp;agentid=${res.data.clientId}#wechat_redirect`;
+
+				window.location.href = authRedirect;
+			});
+		} else {
+			uni.showToast({
+				title: '未获取到渠道信息,请退出重试',
+				icon: 'none',
+				duration: 3600,
+			});
+		}
+	}
+```
+
+3. 在上方回掉页面中拿取``code``后进行登录请求换取token (*此页面路径必须与上方接口中回调页面redirectUrl一致)
+
+```
+&lt;template&gt;
+	&lt;view style='opacity: 1'&gt; &lt;/view&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { corpLogin } from '@/api/wx';
+
+export default {
+	data() {
+		return {};
+	},
+	onLoad() {
+		let code = '';
+		const fullUrl = window.location.href; // 获取完整url
+		// 获取code
+		const queryString = fullUrl.split('?')[1];
+		const parts = queryString.split('&amp;');
+		for (let part of parts) {
+			if (part.startsWith('code=')) {
+				code = part.substring(5);
+				code = code.trim();
+				break;
+			}
+		}
+
+		let tenantId = uni.getStorageSync('tenantId');
+		let channelCode = uni.getStorageSync('channelCode');
+
+		if (code) {
+			this.wxCorpLogin({
+				code,
+				state: 'wxlogin',
+				grant_type: 'qywx',
+				scope: 'all',
+				source: 'WECHAT_ENTERPRISE',
+				tenantId,
+				channelCode,
+			});
+		}
+	},
+	methods: {
+		wxCorpLogin(params) {
+			corpLogin(params).then((data) =&gt; {
+				this.$u.func.login(data, '/pages/plugin/workflow/pages/workbench/index');
+			});
+		},
+	},
+};
+&lt;/script&gt;
+
+&lt;style lang='scss' scoped&gt;
+&lt;/style&gt;
+
+```
+
+。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20-qi-ye-wei-xin-nei-qian-H5-deng-lu-liu-cheng-%20%F0%9F%AB%A4.html</guid><pubDate>Thu, 06 Feb 2025 06:21:12 +0000</pubDate></item><item><title>JS - common methods 🎢</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20common%20methods%20%F0%9F%8E%A2.html</link><description>1. **反转字符串**：使用一行代码反转字符串：&#13;
+   ```javascript&#13;
+   const reversedString = str.split('').reverse().join('');&#13;
+   ```&#13;
+&#13;
+2. **数组求和**：使用 `reduce()` 方法计算数组中所有元素的和：&#13;
+   ```javascript&#13;
+   const sum = numbers.reduce((acc, curr) =&gt; acc + curr, 0);&#13;
+   ```&#13;
+&#13;
+3. **查找数组中的最大值和最小值**：使用扩展运算符和 `Math.max()`、`Math.min()`：&#13;
+   ```javascript&#13;
+   const max = Math.max(...numbers);&#13;
+   const min = Math.min(...numbers);&#13;
+   ```&#13;
+&#13;
+4. **去除数组中的重复项**：使用 `Set` 创建一个不含重复项的新数组：&#13;
+   ```javascript&#13;
+   const uniqueArray = [...new Set([1, 2, 2, 3])];&#13;
+   ```&#13;
+&#13;
+5. **扁平化多维数组**：使用 `flat()` 方法将嵌套数组扁平化：&#13;
+   ```javascript&#13;
+   const flatArray = nestedArray.flat(2);&#13;
+   ```&#13;
+&#13;
+6. **复制文本到剪贴板**：使用剪贴板 API 复制文本：&#13;
+   ```javascript&#13;
+   function copyText(text) {&#13;
+       navigator.clipboard.writeText(text);&#13;
+   }&#13;
+   ```&#13;
+&#13;
+7. **检查值是否为数字**：使用 `typeof` 和 `!isNaN()` 检查：&#13;
+   ```javascript&#13;
+   const isNumber = value =&gt; typeof value === 'number' &amp;&amp; !isNaN(value);&#13;
+   ```&#13;
+&#13;
+8. **生成范围内的随机数**：生成两个值之间的随机数：&#13;
+   ```javascript&#13;
+   const getRandom = (min, max) =&gt; Math.floor(Math.random() * (max - min + 1)) + min;&#13;
+   ```&#13;
+&#13;
+9. **将字符串转换为数字**：使用 `+` 操作符快速转换：&#13;
+   ```javascript&#13;
+   const num = +'42'; // 42&#13;
+   ```&#13;
+&#13;
+10. **函数中的默认参数**：设置默认参数值以避免未定义的值：&#13;
+    ```javascript&#13;
+    function greet(name = 'Guest') {&#13;
+        console.log(`Hello, ${name}`);&#13;
+    }&#13;
+    ```&#13;
+&#13;
+11. **将参数对象转换为数组**：将函数中的 `arguments` 转换为实际数组：&#13;
+    ```javascript&#13;
+    const argsArray = Array.from(arguments);&#13;
+    ```&#13;
+&#13;
+12. **防抖函数**：确保函数不会在短时间内被多次调用：&#13;
+    ```javascript&#13;
+    function debounce(func, delay) {&#13;
+        let timeout;&#13;
+        return function(...args) {&#13;
+            clearTimeout(timeout);&#13;
+            timeout = setTimeout(() =&gt; func.apply(this, args), delay);&#13;
+        };&#13;
+    }&#13;
+    ```&#13;
+&#13;
+13. **节流函数**：确保函数在指定时间内最多只被调用一次：&#13;
+    ```javascript&#13;
+    function throttle(func, limit) {&#13;
+        let lastFunc;&#13;
+        let lastRan;&#13;
+        return function(...args) {&#13;
+            if (!lastRan) {&#13;
+                func.apply(this, args);&#13;
+                lastRan = Date.now();&#13;
+            } else {&#13;
+                clearTimeout(lastFunc);&#13;
+                lastFunc = setTimeout(() =&gt; {&#13;
+                    if (Date.now() - lastRan &gt;= limit) {&#13;
+                        func.apply(this, args);&#13;
+                        lastRan = Date.now();&#13;
+                    }&#13;
+                }, limit - (Date.now() - lastRan));&#13;
+            }&#13;
+        };&#13;
+    }&#13;
+    ```&#13;
+&#13;
+14. **检查对象是否为空**：使用 `Object.keys()` 检查对象是否没有属性：&#13;
+    ```javascript&#13;
+    const isEmpty = obj =&gt; Object.keys(obj).length === 0;&#13;
+    ```&#13;
+&#13;
+15. **短路求值**：使用短路运算符条件赋值：&#13;
+    ```javascript&#13;
+    const message = user.isLoggedIn &amp;&amp; 'Welcome back!';&#13;
+    ```&#13;
+&#13;
+16. **对象属性简写**：当属性名与变量名相同时，可以使用简写语法：&#13;
+    ```javascript&#13;
+    const person = { name, age };&#13;
+    ```&#13;
+&#13;
+17. **数组解构赋值**：将数组中的值赋给变量：&#13;
+    ```javascript&#13;
+    const [first, second] = [10, 20];&#13;
+    ```&#13;
+&#13;
+18. **对象解构赋值**：从对象中提取属性并赋给变量：&#13;
+    ```javascript&#13;
+    const {name, age} = {name: 'Jane', age: 30};&#13;
+    ```&#13;
+&#13;
+19. **模板字面量**：用于方便的字符串插值：&#13;
+    ```javascript&#13;
+    const greeting = `Hello, ${name}!`;&#13;
+    ```&#13;
+&#13;
+20. **将 NodeList 转换为数组**：使用 `Array.from()` 转换 NodeList：&#13;
+    ```javascript&#13;
+    const nodeArray = Array.from(nodeList);&#13;
+    ```&#13;
+&#13;
+21. **检查数组是否包含某个元素**：使用 `includes()` 方法检查值是否存在于数组中：&#13;
+    ```javascript&#13;
+    console.log(fruits.includes('banana')); // true&#13;
+    ```&#13;
+&#13;
+22. **获取数组中的唯一值**：可以使用 `Set` 获取唯一值：&#13;
+    ```javascript&#13;
+    const uniqueValues = Array.from(new Set([1, 2, 2, 3, 3]));&#13;
+    ```&#13;
+&#13;
+23. **查找对象属性**：使用 `Object.keys()` 和 `Object.values()` 获取对象的键和值：&#13;
+    ```javascript&#13;
+    console.log(Object.keys(obj)); // ['name', 'age']&#13;
+    console.log(Object.values(obj)); // ['Alice', 30]&#13;
+    ```&#13;
+&#13;
+24. **合并对象**：使用扩展运算符合并对象：&#13;
+    ```javascript&#13;
+    const mergedObj = { ...obj1, ...obj2 };&#13;
+    ```&#13;
+&#13;
+25. **映射数组**：使用 `map()` 方法对每个元素应用函数进行转换：&#13;
+    ```javascript&#13;
+    const doubled = numbers.map(num =&gt; num * 2); // [2, 4, 6]&#13;
+    ```&#13;
+&#13;
+26. **过滤数组**：过滤掉不需要的元素：&#13;
+    ```javascript&#13;
+    const evens = numbers.filter(num =&gt; num % 2 === 0); // [2, 4]&#13;
+    ```&#13;
+&#13;
+27. **Promise.all()**：同时处理多个异步任务：&#13;
+    ```javascript&#13;
+    Promise.all([fetch('/data1'), fetch('/data2')])&#13;
+        .then(responses =&gt; { /* Handle responses */ })&#13;
+        .catch(error =&gt; console.error(error));&#13;
+    ```&#13;
+&#13;
+28. **将 Set 转换为数组**：使用扩展运算符将 Set 转换为数组：&#13;
+    ```javascript&#13;
+    const array = [...set];&#13;
+    ```&#13;
+&#13;
+29. **对数组进行排序**：对数字数组进行升序或降序排序：&#13;
+    ```javascript&#13;
+    numbers.sort((a, b) =&gt; a - b); // 升序&#13;
+    numbers.sort((a, b) =&gt; b - a); // 降序&#13;
+    ```&#13;
+&#13;
+30. **填充字符串**：在字符串的开始或结束填充以达到指定长度：&#13;
+    ```javascript&#13;
+    const paddedStr = str.padStart(3, '0'); // '005'&#13;
+    ```&#13;
+&#13;
+31. **去除空格**：使用 `trim()`、`trimStart()` 和 `trimEnd()` 去除空格：&#13;
+     ```javascript&#13;
+     console.log(text.trim()); // 'Hello'&#13;
+     ```&#13;
+&#13;
+32. **检查字符串是否包含子串**：使用 `includes()` 检查字符串中是否包含特定子串：&#13;
+     ```javascript&#13;
+     console.log(sentence.includes('awesome')); // true&#13;
+     ```&#13;
+&#13;
+33. **查找子串索引**：使用 `indexOf()` 查找子串的位置：&#13;
+     ```javascript&#13;
+     console.log(sentence.indexOf('fun')); // 14&#13;
+     ```&#13;
+&#13;
+34. **重复字符串**：使用 `repeat()` 重复字符串：&#13;
+     ```javascript&#13;
+     console.log(str.repeat(3)); // 'hahaha'&#13;
+     ```&#13;
+&#13;
+35. **替换子串**：使用 `replace()` 替换子串：&#13;
+     ```javascript&#13;
+     const newText = text.replace('fun', 'awesome');&#13;
+     ```&#13;
+&#13;
+36. **可选链操作符**：安全访问嵌套属性，避免错误：&#13;
+     ```javascript&#13;
+     console.log(user?.address?.city); // undefined，无错误发生&#13;
+     ```&#13;
+&#13;
+37. **将日期转换为本地字符串格式**：格式化日期为本地日期字符串：&#13;
+     ```javascript&#13;
+     console.log(date.toLocaleDateString('en-US')); // MM/DD/YYYY 格式&#13;
+     ```&#13;
+&#13;
+38. **检查值是否为数组**：使用 `Array.isArray()` 检查是否为数组：&#13;
+     ```javascript&#13;
+     console.log(Array.isArray([1, 2, 3])); // true&#13;
+     ```&#13;
+&#13;
+39. **检查 DOM 中元素是否存在**：使用 `document.querySelector()` 检查元素存在性：&#13;
+     ```javascript&#13;
+     const elementExists = !!document.querySelector('.my-element');&#13;
+     ```&#13;
+&#13;
+40. **获取当前时间戳**：使用 `Date.now()` 获取当前时间戳：&#13;
+     ```javascript&#13;
+     const timestamp = Date.now();&#13;
+     ```&#13;
+&#13;
+41. **格式化带逗号的数字**：使用 `toLocaleString()` 格式化数字带逗号分隔符：&#13;
+     ```javascript&#13;
+     console.log(number.toLocaleString()); // '1,234,567'&#13;
+     ```&#13;
+&#13;
+42. **将数字四舍五入到两位小数**：使用 `toFixed()` 四舍五入数字到两位小数：&#13;
+     ```javascript&#13;
+     console.log(number.toFixed(2)); // '5.68'&#13;
+     ```&#13;
+&#13;
+43. **检查变量是否未定义**：检查变量是否未定义:&#13;
+      ```javascript &#13;
+      if (typeof variable === 'undefined') { /* Handle undefined */ }&#13;
+      ```&#13;
+    &#13;
+44. **从数组中获取随机项**: 使用 Math.random() 从数组中获取随机项:&#13;
+      ``` javascript &#13;
+      const randomItem = items[Math.floor(Math.random() * items.length)];&#13;
+      ```&#13;
+    &#13;
+45. **简洁函数的箭头函数用法:** 使用箭头函数提供简洁语法:&#13;
+      ```&#13;
+      const add = (a, b) =&gt; a + b;&#13;
+      ```&#13;
+    &#13;
+46. **浅拷贝对象:** 使用 Object.assign() 拷贝对象:&#13;
+      ```&#13;
+      const copy = Object.assign({}, original);&#13;
+      ```&#13;
+    &#13;
+47. **类型检查:** 使用 typeof 检查变量类型:&#13;
+      ```&#13;
+      console.log(typeof 'Hello'); // 'string'&#13;
+      ```&#13;
+    &#13;
+48. **动态属性名:** 使用方括号设置动态属性名:&#13;
+      ```&#13;
+      const obj = { [key]: 'John' };&#13;
+      ```&#13;
+    &#13;
+49. **检查空值:** 使用空合并运算符处理空或未定义的值:&#13;
+      ```&#13;
+      const value = user.age ?? 'Unknown';&#13;
+      ```&#13;
+    &#13;
+50. **更易调试的表格显示:** 使用 console.table() 在控制台显示表格数据:&#13;
+      ```&#13;
+      console.table(users);&#13;
+      ```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20common%20methods%20%F0%9F%8E%A2.html</guid><pubDate>Fri, 20 Dec 2024 02:01:03 +0000</pubDate></item><item><title>Uniapp - Uniapp一键登录 🥐</title><link>https://zhaojjjjjj.github.io/post/Uniapp%20-%20Uniapp-yi-jian-deng-lu-%20%F0%9F%A5%90.html</link><description>&gt; 开发者需要登录[uniCloud控制台](https://unicloud.dcloud.net.cn/pages/uni-login/login-account)，申请开通一键登录服务。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Uniapp%20-%20Uniapp-yi-jian-deng-lu-%20%F0%9F%A5%90.html</guid><pubDate>Thu, 12 Dec 2024 01:57:38 +0000</pubDate></item><item><title>CSS - CSS One-Line 🧀</title><link>https://zhaojjjjjj.github.io/post/CSS%20-%20CSS%20One-Line%20%F0%9F%A7%80.html</link><description>#### 1. aspect-ratio&#13;
+**描述**: 用于定义元素的宽高比，简化了以往使用“填充黑客”的方法。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/CSS%20-%20CSS%20One-Line%20%F0%9F%A7%80.html</guid><pubDate>Mon, 25 Nov 2024 02:05:33 +0000</pubDate></item><item><title>Git - Memo2 🍿</title><link>https://zhaojjjjjj.github.io/post/Git%20-%20Memo2%20%F0%9F%8D%BF.html</link><description>### 查看远程仓库&#13;
+&#13;
+查看已经配置的远程仓库服务器，可以运行 `git remote` 命令。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Git%20-%20Memo2%20%F0%9F%8D%BF.html</guid><pubDate>Wed, 06 Nov 2024 02:33:33 +0000</pubDate></item><item><title>JS - Array 🗻</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Array%20%F0%9F%97%BB.html</link><description>#### 1. `Object.assign()`&#13;
+&#13;
+`Object.assign()` 方法用于将一个或多个源对象的可枚举属性复制到目标对象。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Array%20%F0%9F%97%BB.html</guid><pubDate>Wed, 09 Oct 2024 12:52:44 +0000</pubDate></item><item><title>JS - Set() 💁‍♂️</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Set%28%29%20%F0%9F%92%81%E2%80%8D%E2%99%82%EF%B8%8F.html</link><description>&#13;
+### 1. **ES2015 中的 JavaScript Set 基础功能**&#13;
+&#13;
+#### 1.1 创建 Set 和去重功能&#13;
+可以创建一个空的 `Set` 或通过数组初始化一个 `Set`，任何重复的值都会被自动移除。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Set%28%29%20%F0%9F%92%81%E2%80%8D%E2%99%82%EF%B8%8F.html</guid><pubDate>Thu, 05 Sep 2024 05:25:05 +0000</pubDate></item><item><title>JS - Make a phone vibrate 🦋</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Make%20a%20phone%20vibrate%20%F0%9F%A6%8B.html</link><description>### 使用 JavaScript 让手机振动&#13;
+&#13;
+#### Vibration API 简介&#13;
+Vibration API 是现代 Web 浏览器中的一个功能，可以控制设备的振动功能。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Make%20a%20phone%20vibrate%20%F0%9F%A6%8B.html</guid><pubDate>Thu, 05 Sep 2024 03:55:48 +0000</pubDate></item><item><title>Vue3 - Install Tailwind 🍖</title><link>https://zhaojjjjjj.github.io/post/Vue3%20-%20Install%20Tailwind%20%F0%9F%8D%96.html</link><description>&#13;
+#### 安装 Tailwind CSS&#13;
+Tailwind CSS 要求 Node.js 版本至少为 12.13.0。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue3%20-%20Install%20Tailwind%20%F0%9F%8D%96.html</guid><pubDate>Thu, 05 Sep 2024 03:43:51 +0000</pubDate></item><item><title>.gitignore 🍇</title><link>https://zhaojjjjjj.github.io/post/.gitignore%20%F0%9F%8D%87.html</link><description>在提交代码时，`.gitignore` 文件只能忽略那些没有被 Git 追踪的文件&#13;
+如果某个文件已经被 Git 追踪，即使在 `.gitignore` 中添加了对应的规则，这个文件仍然会继续被追踪&#13;
+&#13;
+解决办法：&#13;
+&#13;
+1. **删除文件的本地缓存**：&#13;
+   使用以下命令将文件从 Git 的缓存中删除（即将文件从追踪状态改为未追踪状态），但不会删除文件本身：&#13;
+&#13;
+   ```bash&#13;
+   git rm --cached &lt;文件名&gt;&#13;
+   ```&#13;
+&#13;
+   如果想一次性将多个文件或整个目录移出追踪，可以使用通配符或目录路径：&#13;
+&#13;
+   ```bash&#13;
+   git rm -r --cached .&#13;
+   ```&#13;
+&#13;
+2. **更新 `.gitignore` 文件**：&#13;
+   确保在 `.gitignore` 文件中正确地添加你想忽略的文件或目录&#13;
+&#13;
+3. **提交更改**：&#13;
+   将上述更改提交到仓库中：&#13;
+&#13;
+   ```bash&#13;
+   git add .&#13;
+   git commit -m 'Update .gitignore and remove files from tracking'&#13;
+   ```&#13;
+&#13;
+通过这种方式，可以确保 `.gitignore` 文件的规则生效，不再追踪那些不需要纳入版本管理的文件。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/.gitignore%20%F0%9F%8D%87.html</guid><pubDate>Fri, 16 Aug 2024 07:18:09 +0000</pubDate></item><item><title>CSS - 实时获取视口的宽高 🧑‍🌾</title><link>https://zhaojjjjjj.github.io/post/CSS%20-%20-shi-shi-huo-qu-shi-kou-de-kuan-gao-%20%F0%9F%A7%91%E2%80%8D%F0%9F%8C%BE.html</link><description>## CODE&#13;
+&#13;
+```html&#13;
+&lt;div&gt;&lt;/div&gt;&#13;
+```&#13;
+```css&#13;
+@property --_w {&#13;
+  syntax: '&lt;length&gt;';&#13;
+  inherits: true;&#13;
+  initial-value: 100vw;&#13;
+}&#13;
+@property --_h {&#13;
+  syntax: '&lt;length&gt;';&#13;
+  inherits: true;&#13;
+  initial-value: 100vh;&#13;
+}&#13;
+:root {&#13;
+  --w: tan(atan2(var(--_w), 1px));&#13;
+  --h: tan(atan2(var(--_h), 1px));&#13;
+}&#13;
+&#13;
+html,&#13;
+body {&#13;
+  height: 100%;&#13;
+  box-sizing: border-box;&#13;
+}&#13;
+&#13;
+div {&#13;
+  height: 100%;&#13;
+  background: linear-gradient(&#13;
+    125deg,&#13;
+    #ecfcff 0%,&#13;
+    #ecfcff 40%,&#13;
+    #b2fcff calc(40% + 1px),&#13;
+    #b2fcff 60%,&#13;
+    #5edfff calc(60% + 1px),&#13;
+    #5edfff 72%,&#13;
+    #3e64ff calc(72% + 1px),&#13;
+    #3e64ff 100%&#13;
+  );&#13;
+  &amp;::before {&#13;
+    content: counter(w) 'x' counter(h);&#13;
+    counter-reset: h var(--h) w var(--w);&#13;
+    position: absolute;&#13;
+    top: 50%;&#13;
+    left: 50%;&#13;
+    transform: translate(-50%, -50%);&#13;
+    font-size: 12rem;&#13;
+    mix-blend-mode: difference;&#13;
+    white-space: nowrap;&#13;
+    color: #fff;&#13;
+    font-weight: 700;&#13;
+    white-space: nowrap;&#13;
+  }&#13;
+}&#13;
+```&#13;
+&#13;
+## EXPLAIN&#13;
+&#13;
+### `@property` 规则&#13;
+&#13;
+```css&#13;
+@property --_w {&#13;
+    syntax: '&lt;length&gt;';&#13;
+    inherits: true;&#13;
+    initial-value: 100vw;&#13;
+}&#13;
+@property --_h {&#13;
+    syntax: '&lt;length&gt;';&#13;
+    inherits: true;&#13;
+    initial-value: 100vh;&#13;
+}&#13;
+```&#13;
+&#13;
+- `@property` 规则用于定义自定义属性的行为。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/CSS%20-%20-shi-shi-huo-qu-shi-kou-de-kuan-gao-%20%F0%9F%A7%91%E2%80%8D%F0%9F%8C%BE.html</guid><pubDate>Thu, 25 Jul 2024 03:27:28 +0000</pubDate></item><item><title>CSS - 物理像素和设备像素比等概念 🚴‍♂️</title><link>https://zhaojjjjjj.github.io/post/CSS%20-%20-wu-li-xiang-su-he-she-bei-xiang-su-bi-deng-gai-nian-%20%F0%9F%9A%B4%E2%80%8D%E2%99%82%EF%B8%8F.html</link><description>物理像素（physical pixels）和设备像素比（device pixel ratio, DPR），这些概念与设备显示器的分辨率和CSS像素的渲染方式有关&#13;
+&#13;
+### 1. 物理像素（Physical Pixels）&#13;
+&#13;
+物理像素是显示器实际能够显示的最小单位。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/CSS%20-%20-wu-li-xiang-su-he-she-bei-xiang-su-bi-deng-gai-nian-%20%F0%9F%9A%B4%E2%80%8D%E2%99%82%EF%B8%8F.html</guid><pubDate>Mon, 22 Jul 2024 01:45:45 +0000</pubDate></item><item><title>Chrome - 冻结机制 🏡</title><link>https://zhaojjjjjj.github.io/post/Chrome%20-%20-dong-jie-ji-zhi-%20%F0%9F%8F%A1.html</link><description>Chrome 浏览器的冻结机制（Freeze Mechanism）是一种优化技术，旨在提高浏览器的性能和用户体验，特别是在资源有限的设备上（如移动设备）或在用户打开多个标签页时。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Chrome%20-%20-dong-jie-ji-zhi-%20%F0%9F%8F%A1.html</guid><pubDate>Fri, 19 Jul 2024 07:52:43 +0000</pubDate></item><item><title>Vue - &lt;Suspense&gt; 🔑</title><link>https://zhaojjjjjj.github.io/post/Vue%20-%20-Suspense-%20%F0%9F%94%91.html</link><description>在 Vue 3 中，`&lt;Suspense&gt;` 是一个内置的组件，用于处理异步组件的渲染。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue%20-%20-Suspense-%20%F0%9F%94%91.html</guid><pubDate>Wed, 17 Jul 2024 01:57:01 +0000</pubDate></item><item><title>Vue - 强制重新渲染组件 🦌</title><link>https://zhaojjjjjj.github.io/post/Vue%20-%20-qiang-zhi-zhong-xin-xuan-ran-zu-jian-%20%F0%9F%A6%8C.html</link><description>在 Vue 3 中，通过在 `&lt;router-view&gt;` 上设置一个动态 `key` 属性，可以在每次路由变化时强制重新渲染组件。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue%20-%20-qiang-zhi-zhong-xin-xuan-ran-zu-jian-%20%F0%9F%A6%8C.html</guid><pubDate>Mon, 15 Jul 2024 12:58:27 +0000</pubDate></item><item><title>What - C/S B/S 🤲</title><link>https://zhaojjjjjj.github.io/post/What%20-%20C-S%20B-S%20%F0%9F%A4%B2.html</link><description> - C/S（Client/Server，客户端/服务器模式）&#13;
+   - C/S模式是一种软件架构模式，它将应用分为两部分：客户端和服务器。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/What%20-%20C-S%20B-S%20%F0%9F%A4%B2.html</guid><pubDate>Thu, 06 Jun 2024 02:38:22 +0000</pubDate></item><item><title>JS - Input upload the same file issue 🤢</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Input%20upload%20the%20same%20file%20issue%20%F0%9F%A4%A2.html</link><description>- 在处理文件上传，特别是使用HTML的\&lt;input type='file'&gt;元素时，可能会遇到一个问题：如果尝试选择同一个文件两次（没有更改文件选择），某些浏览器可能不会触发change事件。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Input%20upload%20the%20same%20file%20issue%20%F0%9F%A4%A2.html</guid><pubDate>Thu, 23 May 2024 13:45:50 +0000</pubDate></item><item><title>VSCode - Settings 💻</title><link>https://zhaojjjjjj.github.io/post/VSCode%20-%20Settings%20%F0%9F%92%BB.html</link><description>```json&#13;
+	// 打字丝滑&#13;
+	'editor.smoothScrolling': true,&#13;
+	'editor.cursorBlinking': 'expand',&#13;
+	'editor.cursorSmoothCaretAnimation': 'on',&#13;
+	'workbench.list.smoothScrolling': true,&#13;
+&#13;
+	// 鼠标控制页面大小&#13;
+	'editor.mouseWheelZoom': true,&#13;
+&#13;
+	// 彩虹括号与作用域块线条提示&#13;
+	'editor.guides.bracketPairs': true,&#13;
+	'editor.bracketPairColorization.enabled': true,&#13;
+&#13;
+	// 自带的代码提示&#13;
+	// 控制活动代码段是否阻止快速建议&#13;
+	'editor.suggest.snippetsPreventQuickSuggestions': false,&#13;
+	// 除了 `Tab` 键以外， `Enter` 键是否同样可以接受建议&#13;
+	// 这能减少“插入新行”和“接受建议”命令之间的歧义&#13;
+	'editor.acceptSuggestionOnEnter': 'smart',&#13;
+	// 代码补全列表中，优先选择最近的建议&#13;
+	'editor.suggestSelection': 'recentlyUsedByPrefix',&#13;
+&#13;
+	// 自动补全括号引号&#13;
+	'editor.autoClosingBrackets': 'beforeWhitespace',&#13;
+	'editor.autoClosingDelete': 'always',&#13;
+	'editor.autoClosingOvertype': 'always',&#13;
+	'editor.autoClosingQuotes': 'beforeWhitespace',&#13;
+&#13;
+	// window下美化窗口 ( 改变的是编辑器的提示框，Mac不生效 )&#13;
+	// 'window.dialogStyle': 'custom',&#13;
+&#13;
+	// 自动换行和行高&#13;
+	'editor.wordWrap': 'on',&#13;
+	'editor.lineHeight': 1.5,&#13;
+&#13;
+	// 文件夹紧凑模式&#13;
+	'explorer.compactFolders': false,&#13;
+	'notebook.compactView': false,&#13;
+&#13;
+	// 格式化自动删除无意义的分号&#13;
+	'javascript.format.semicolons': 'remove',&#13;
+	'typescript.format.semicolons': 'remove',&#13;
+&#13;
+	// Vue 自动补全 .value 和缺失属性提醒&#13;
+	'vue.inlayHints.missingProps': true,&#13;
+	'vue.autoInsert.dotValue': true,&#13;
+	'workbench.startupEditor': 'none',&#13;
+&#13;
+	// 自动猜测文本的编码&#13;
+	'files.autoGuessEncoding': true,&#13;
+&#13;
+	// 保存自动删除末尾空格&#13;
+	'files.trimTrailingWhitespace': false,&#13;
+&#13;
+	// 终端代码补全&#13;
+	'terminal.integrated.shellIntegration.suggestEnabled': true&#13;
+&#13;
+	// 搜索排除目录&#13;
+	'search.exclude': {&#13;
+	  '**/node_modules': true,&#13;
+	  '**/pnpm-lock.yaml': true,&#13;
+	  '**/package-lock.json': true,&#13;
+	  '**/.DS_Store': true,&#13;
+	  '**/.git': true,&#13;
+	  '**/.gitignore': true,&#13;
+	  '**/.idea': true,&#13;
+	  '**/.svn': true,&#13;
+	  '**/.vscode': true,&#13;
+	  '**/build': true,&#13;
+	  '**/dist': true,&#13;
+	  '**/tmp': true,&#13;
+	  '**/yarn.lock': true&#13;
+	}&#13;
+&#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/VSCode%20-%20Settings%20%F0%9F%92%BB.html</guid><pubDate>Thu, 23 May 2024 11:54:42 +0000</pubDate></item><item><title>JS - Array reduce( ) 🥽</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Array%20reduce%28%20%29%20%F0%9F%A5%BD.html</link><description>### 概念&#13;
+&gt; ` reduce() ` 方法是一种强大的数组操作工具，允许你对数组中的所有元素执行一个由用户提供的reducer函数，从而将数组“折叠”或“累积”成一个单一的最终值。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Array%20reduce%28%20%29%20%F0%9F%A5%BD.html</guid><pubDate>Wed, 17 Apr 2024 11:44:44 +0000</pubDate></item><item><title>GSAP - GSAP and ScrollTrigger 🐳</title><link>https://zhaojjjjjj.github.io/post/GSAP%20-%20GSAP%20and%20ScrollTrigger%20%F0%9F%90%B3.html</link><description>```js&#13;
+gsap.registerPlugin(ScrollTrigger)&#13;
+```&#13;
+- registerPlugin(ScrollTrigger)  GSAP开始调用 ScrollTrigger 。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/GSAP%20-%20GSAP%20and%20ScrollTrigger%20%F0%9F%90%B3.html</guid><pubDate>Tue, 16 Apr 2024 13:01:30 +0000</pubDate></item><item><title>Git - Memo 🧗</title><link>https://zhaojjjjjj.github.io/post/Git%20-%20Memo%20%F0%9F%A7%97.html</link><description>#### Config&#13;
+- 设置全局配置&#13;
+```&#13;
+git config --global user.name '[name]'&#13;
+git config --global user.email '[email]'&#13;
+```&#13;
+&#13;
+#### Get started&#13;
+ - 创建 Git 储存库&#13;
+```&#13;
+git init&#13;
+```&#13;
+ - 克隆现有 Git 储存库&#13;
+```&#13;
+git clone [url]&#13;
+```&#13;
+&#13;
+#### Commit&#13;
+ - 提交所有跟踪的更改&#13;
+```&#13;
+git commit -am '[commit message]'&#13;
+```&#13;
+ - 向上次提交添加新的修改&#13;
+```&#13;
+git commit --amend --no-edit&#13;
+```&#13;
+ - 更改最后的提交消息&#13;
+```&#13;
+git commit --amend&#13;
+```&#13;
+&#13;
+#### Better&#13;
+ - 撤销最近的提交并保留更改&#13;
+```&#13;
+git reset HEAD~1&#13;
+```&#13;
+ - 撤销 N 最近的提交并保留更改&#13;
+```&#13;
+git reset HEAD~N&#13;
+```&#13;
+ - 撤销最近的提交并摆脱更改&#13;
+```&#13;
+git reset HEAD~1 --hard&#13;
+&#13;
+```&#13;
+ - 将分支重置为远程状态&#13;
+```&#13;
+git fetch origin&#13;
+git reset --hard origin/[branch-name]&#13;
+```&#13;
+ - 将本地 master 分子重命名为 main&#13;
+```&#13;
+git branch -m master main&#13;
+```&#13;
+- 远端存在这个文件，但是后续的修改不更新&#13;
+```&#13;
+git update-index--assume.unchanged &lt;文件名称&gt;&#13;
+// 例如&#13;
+git update-index--assume.unchanged utils/index.js&#13;
+&#13;
+// 后期想提交该文件&#13;
+git update-index--no-assume-unchanged &lt;文件名称&gt;&#13;
+// 例如&#13;
+git update-index--no-assume.unchanged utils/index.js&#13;
+```&#13;
+ 。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Git%20-%20Memo%20%F0%9F%A7%97.html</guid><pubDate>Fri, 12 Apr 2024 01:02:14 +0000</pubDate></item><item><title>Vue - Change node_modules source code 🥩</title><link>https://zhaojjjjjj.github.io/post/Vue%20-%20Change%20node_modules%20source%20code%20%F0%9F%A5%A9.html</link><description>&gt; 当node_modules中的默认配置不满足当前项目需求时，需要对node_modules中的源码进行修改。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue%20-%20Change%20node_modules%20source%20code%20%F0%9F%A5%A9.html</guid><pubDate>Tue, 02 Apr 2024 07:24:27 +0000</pubDate></item><item><title>H5 - IPhone mobile can't see the phone number 🤦🏼‍♂️</title><link>https://zhaojjjjjj.github.io/post/H5%20-%20IPhone%20mobile%20can%27t%20see%20the%20phone%20number%20%F0%9F%A4%A6%F0%9F%8F%BC%E2%80%8D%E2%99%82%EF%B8%8F.html</link><description>&gt; 在HTML5页面中，有时在iPhone等iOS设备上，含有电话号码的\&lt;a&gt;标签可能不会像预期那样显示为可点击的链接或者号码格式被误识别，这通常是由于Safari和其他WebKit内核浏览器的智能识别机制导致的。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/H5%20-%20IPhone%20mobile%20can%27t%20see%20the%20phone%20number%20%F0%9F%A4%A6%F0%9F%8F%BC%E2%80%8D%E2%99%82%EF%B8%8F.html</guid><pubDate>Mon, 01 Apr 2024 09:41:35 +0000</pubDate></item><item><title>Go - vscode save auto format 😽</title><link>https://zhaojjjjjj.github.io/post/Go%20-%20vscode%20save%20auto%20format%20%F0%9F%98%BD.html</link><description>```json&#13;
+setting.json&#13;
+&#13;
+'files.autoSave': 'onFocusChange',&#13;
+'editor.formatOnSave': true,&#13;
+'go.gopath':'${workspaceRoot}:/Users/jinxue/golib', // 当前工作空间${wordspaceRoot}加上系统 GOPATH 目录&#13;
+'go.goroot': '/usr/local/Cellar/go/1.9/libexec', // go 的安装目录&#13;
+'go.formatOnSave': true, //在保存代码时自动格式化代码&#13;
+'go.formatTool': 'goimports', //使用 goimports 工具进行代码格式化，或者使用 goreturns 和 gofmt&#13;
+'go.buildOnSave': true, //在保存代码时自动编译代码&#13;
+'go.lintOnSave': true, //在保存代码时自动检查代码可以优化的地方，并给出建议&#13;
+'go.vetOnSave': false, //在保存代码时自动检查潜在的错误&#13;
+'go.coverOnSave': false, //在保存代码时执行测试，并显示测试覆盖率&#13;
+'go.useCodeSnippetsOnFunctionSuggest': true, //使用代码片段作为提示&#13;
+'go.gocodeAutoBuild': false //代码自动编译构建&#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Go%20-%20vscode%20save%20auto%20format%20%F0%9F%98%BD.html</guid><pubDate>Mon, 01 Apr 2024 03:10:30 +0000</pubDate></item><item><title>About publish NPM 🫤</title><link>https://zhaojjjjjj.github.io/post/About%20publish%20NPM%20%F0%9F%AB%A4.html</link><description>```&#13;
+mkdir npm-test    // 创建文件夹&#13;
+&#13;
+npm init    // 初始化&#13;
+&#13;
+// 注册 npm 账号&#13;
+&#13;
+npm config get registry    // 是否为 npm 官方的源，不是就切回&#13;
+&#13;
+npm config set registry https://registry.npmjs.org&#13;
+&#13;
+npm login    // 登录 npm 账户&#13;
+&#13;
+npm publish    // 发布 npm 包 &#13;
+&#13;
+npm whoami    // 查看当前登录 npm 的账户&#13;
+&#13;
+npm version patch    // 补丁版本，版本号最后一位数加1&#13;
+npm version minor    // 增加了新功能，版本号中间数加1&#13;
+npm version major    // 大改动，不向下兼容，版本号第一位数加1&#13;
+```&#13;
+### package.json&#13;
+- main 定义入口文件，默认是 index.js&#13;
+- name 发布后的 npm 包名&#13;
+- keywords 关键词&#13;
+- description 描述。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/About%20publish%20NPM%20%F0%9F%AB%A4.html</guid><pubDate>Wed, 27 Mar 2024 08:10:43 +0000</pubDate></item><item><title>H5 - Page refresh when calling camera to take photos and upload 🤧</title><link>https://zhaojjjjjj.github.io/post/H5%20-%20Page%20refresh%20when%20calling%20camera%20to%20take%20photos%20and%20upload%20%F0%9F%A4%A7.html</link><description> - 当前问题&#13;
+1. 在上传组件中(哪怕是最简单的 `&lt;input type='file'&gt;`)，当选择好本地图片或者调取系统摄像头拍好照片后，网页被刷新。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/H5%20-%20Page%20refresh%20when%20calling%20camera%20to%20take%20photos%20and%20upload%20%F0%9F%A4%A7.html</guid><pubDate>Tue, 19 Mar 2024 03:34:17 +0000</pubDate></item><item><title>JS - Practical one line of code (Array) 🤯</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Practical%20one%20line%20of%20code%20%28Array%29%20%F0%9F%A4%AF.html</link><description> - 元素之间的穿插元素&#13;
+ ```js&#13;
+const intersperse = (a, s) =&gt; [...Array(2 * a.length - 1)].map((_, i) =&gt; (i % 2 ? s : a[i / 2]));&#13;
+ &#13;
+intersperse(['A', 'B', 'C'], '/'); &#13;
+// ['A', '/', 'B', '/', 'C']&#13;
+ &#13;
+intersperse([&lt;li&gt;A&lt;/li&gt;, &lt;li&gt;B&lt;/li&gt;, &lt;li&gt;C&lt;/li&gt;], &lt;li&gt;/&lt;/li&gt;); &#13;
+// [&lt;li&gt;A&lt;/li&gt;, &lt;li&gt;/&lt;/li&gt;, &lt;li&gt;B&lt;/li&gt;, &lt;li&gt;/&lt;/li&gt;, &lt;li&gt;C&lt;/li&gt;]&#13;
+```&#13;
+&#13;
+- 重复数组&#13;
+```js&#13;
+// arr 是传入的数组，n 是重复的次数&#13;
+const repeat = (arr, n) =&gt; [].concat(...Array(n).fill(arr));&#13;
+ &#13;
+// Or&#13;
+const repeat = (arr, n) =&gt; Array(n).fill(arr).flat();&#13;
+ &#13;
+repeat([1, 2, 3], 3); &#13;
+// [1, 2, 3, 1, 2, 3, 1, 2, 3]&#13;
+```&#13;
+&#13;
+- 查找数组中最小值的索引&#13;
+```js&#13;
+const indexOfMin = (arr) =&gt; arr.reduce((prev, curr, i, a) =&gt; (curr &lt; a[prev] ? i : prev), 0);&#13;
+ &#13;
+indexOfMin([6, 4, 8, 2, 10]); &#13;
+// 3&#13;
+```&#13;
+&#13;
+- 查找数组中最大值的索引&#13;
+```js&#13;
+const indexOfMax = (arr) =&gt; arr.reduce((prev, curr, i, a) =&gt; (curr &gt; a[prev] ? i : prev), 0);&#13;
+ &#13;
+indexOfMax([1, 3, 9, 7, 5]); &#13;
+// 2&#13;
+```&#13;
+&#13;
+- 获取连续元素的所有数组&#13;
+```js&#13;
+const getConsecutiveArrays = (arr, size) =&gt;&#13;
+    size &gt; arr.length ? [] : arr.slice(size - 1).map((_, i) =&gt; arr.slice(i, size + i));&#13;
+ &#13;
+getConsecutiveArrays([1, 2, 3, 4, 5], 2); &#13;
+// [[1, 2], [2, 3], [3, 4], [4, 5]]&#13;
+getConsecutiveArrays([1, 2, 3, 4, 5], 3); &#13;
+// [[1, 2, 3], [2, 3, 4], [3, 4, 5]]&#13;
+getConsecutiveArrays([1, 2, 3, 4, 5], 6); &#13;
+// []&#13;
+```&#13;
+&#13;
+- 将值转换为数组&#13;
+```js&#13;
+const castArray = (value) =&gt; (Array.isArray(value) ? value : [value]);&#13;
+ &#13;
+castArray(1); // [1]&#13;
+castArray([1, 2, 3]); // [1, 2, 3]&#13;
+```&#13;
+&#13;
+- 通过下标交换数组中两个值的位置&#13;
+``` js&#13;
+// a 是数组，i j 是交换的两个值的下标，i必须比j小&#13;
+const swapItems = (a, i, j) =&gt;&#13;
+    (a[i] &amp;&amp; a[j] &amp;&amp; [...a.slice(0, i), a[j], ...a.slice(i + 1, j), a[i], ...a.slice(j + 1)]) || a;&#13;
+ &#13;
+swapItems([1, 2, 3, 4, 5], 1, 4); // [1, 5, 3, 4, 2]&#13;
+```&#13;
+&#13;
+- 删除数组中的重复值&#13;
+```js&#13;
+const removeDuplicate = (arr) =&gt; arr.filter((i) =&gt; arr.indexOf(i) === arr.lastIndexOf(i));&#13;
+ &#13;
+removeDuplicate(['h', 'e', 'l', 'l', 'o', 'w', 'o', 'r', 'l', 'd']); &#13;
+//  ['h', 'e', 'w', 'r', 'd']&#13;
+```&#13;
+&#13;
+- 获取数组中值的索引&#13;
+```js&#13;
+const indices = (arr, value) =&gt; arr.reduce((acc, v, i) =&gt; (v === value ? [...acc, i] : acc), []);&#13;
+// Or&#13;
+const indices = (arr, value) =&gt; arr.map((v, i) =&gt; (v === value ? i : false)).filter(Boolean);&#13;
+ &#13;
+indices(['h', 'e', 'l', 'l', 'o'], 'l'); // [2, 3]&#13;
+indices(['h', 'e', 'l', 'l', 'o'], 'w'); // []&#13;
+```&#13;
+&#13;
+- 获取数组的所有子集&#13;
+```js&#13;
+const getSubsets = (arr) =&gt; arr.reduce((prev, curr) =&gt; prev.concat(prev.map((k) =&gt; k.concat(curr))), [[]]);&#13;
+ &#13;
+getSubsets([1, 2]); // [[], [1], [2], [1, 2]]&#13;
+getSubsets([1, 2, 3]); // [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]&#13;
+```&#13;
+- 获取数组的所有第 n 的倍数项&#13;
+```js&#13;
+const getNthItems = (arr, nth) =&gt; arr.filter((_, i) =&gt; i % nth === nth - 1);&#13;
+ &#13;
+getNthItems([1, 2, 3, 4, 5, 6, 7, 8, 9], 2); &#13;
+// [2, 4, 6, 8]&#13;
+getNthItems([1, 2, 3, 4, 5, 6, 7, 8, 9], 3); &#13;
+// [3, 6, 9]&#13;
+```&#13;
+&#13;
+- 按数组中的给定键对数组进行排序&#13;
+```js&#13;
+const sortBy = (arr, k) =&gt; arr.concat().sort((a, b) =&gt; (a[k] &gt; b[k] ? 1 : a[k] &lt; b[k] ? -1 : 0));&#13;
+ &#13;
+const people = [&#13;
+    { name: 'Foo', age: 42 },&#13;
+    { name: 'Bar', age: 24 },&#13;
+    { name: 'Fuzz', age: 36 },&#13;
+    { name: 'Baz', age: 32 },&#13;
+];&#13;
+sortBy(people, 'age');&#13;
+//  [&#13;
+//      { name: 'Bar', age: 24 },&#13;
+//      { name: 'Baz', age: 32 },&#13;
+//      { name: 'Fuzz', age: 36 },&#13;
+//      { name: 'Foo', age: 42 },&#13;
+//  ]&#13;
+```&#13;
+&#13;
+- 按数组中的给定键查找数组中的最小项&#13;
+```js&#13;
+const minBy = (arr, key) =&gt; arr.reduce((a, b) =&gt; (a[key] &lt; b[key] ? a : b), {});&#13;
+ &#13;
+const people = [&#13;
+    { name: 'Bar', age: 24 },&#13;
+    { name: 'Baz', age: 32 },&#13;
+    { name: 'Foo', age: 42 },&#13;
+    { name: 'Fuzz', age: 36 },&#13;
+];&#13;
+minBy(people, 'age'); &#13;
+// { name: 'Bar', age: 24 }&#13;
+```&#13;
+&#13;
+- 按数组中的给定键查找数组中的最大项&#13;
+```js&#13;
+const maxBy = (arr, key) =&gt; arr.reduce((a, b) =&gt; (a[key] &gt;= b[key] ? a : b), {});&#13;
+ &#13;
+const people = [&#13;
+    { name: 'Bar', age: 24 },&#13;
+    { name: 'Baz', age: 32 },&#13;
+    { name: 'Foo', age: 42 },&#13;
+    { name: 'Fuzz', age: 36 },&#13;
+];&#13;
+maxBy(people, 'age'); &#13;
+// { name: 'Foo', age: 42 }&#13;
+```&#13;
+&#13;
+- 创建笛卡尔乘积&#13;
+```js&#13;
+const cartesian = (...sets) =&gt; sets.reduce((acc, set) =&gt; acc.flatMap((x) =&gt; set.map((y) =&gt; [...x, y])), [[]]);&#13;
+ &#13;
+cartesian([1, 2], [3, 4]); &#13;
+// [ [1, 3], [1, 4], [2, 3], [2, 4] ]&#13;
+ &#13;
+       3       4&#13;
+   ---------------&#13;
+1 | [1, 3]  [1, 4]&#13;
+  |&#13;
+2 | [2, 3]  [2, 4]&#13;
+```&#13;
+&#13;
+- 检查数组是否为空&#13;
+```js&#13;
+// arr 是一个数组&#13;
+const isEmpty = (arr) =&gt; Array.isArray(arr) &amp;&amp; !arr.length;&#13;
+ &#13;
+isEmpty([]);&#13;
+// true&#13;
+isEmpty([1, 2, 3]);&#13;
+// false&#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Practical%20one%20line%20of%20code%20%28Array%29%20%F0%9F%A4%AF.html</guid><pubDate>Fri, 15 Mar 2024 06:14:46 +0000</pubDate></item><item><title>Delete unused NPM packages in the project 🤓</title><link>https://zhaojjjjjj.github.io/post/Delete%20unused%20NPM%20packages%20in%20the%20project%20%F0%9F%A4%93.html</link><description> &gt; If there are many NPM packages installed in the project but forgot to remove them in package.json&#13;
+- Run command 🥇 &#13;
+```&#13;
+npx depcheck&#13;
+```&#13;
+&gt; This will list all unused NPM packages in the project and remove them from package.json&#13;
+- Run command&#13;
+```&#13;
+npm install&#13;
+```&#13;
+***WELL DOWN*** 👍 。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Delete%20unused%20NPM%20packages%20in%20the%20project%20%F0%9F%A4%93.html</guid><pubDate>Fri, 15 Mar 2024 00:58:14 +0000</pubDate></item><item><title>JS - Common methods for finding elements in arrays 🥳</title><link>https://zhaojjjjjj.github.io/post/JS%20-%20Common%20methods%20for%20finding%20elements%20in%20arrays%20%F0%9F%A5%B3.html</link><description>1. Array.prototype.indexOf() : Returns the index of the first match in the array, or -1 if no match is found. (Accept the second parameter to specify the starting position of the search)&#13;
+```js&#13;
+let arr = [1, 2, 3, 4, 5];&#13;
+let index = arr.indexOf(3); // Output 2&#13;
+``` &#13;
+2. Array.prototype.includes() : Returns a Boolean value indicating whether the given element exists in the array. (Accept the second parameter to specify the starting position of the search) 🥇 &#13;
+```js&#13;
+let arr = [1, 2, 3, 4, 5];&#13;
+let isIncluded = arr.includes(3); // Output true &#13;
+```&#13;
+4. Array.prototype.find() : Returns the value of the first element in the array that meets the condition, otherwise returns undefined. (Accept the second parameter to specify the starting position of the search)&#13;
+```js&#13;
+let arr = [{name: 'Tom', age: 18}, {name: 'Jerry', age: 20}];&#13;
+let person = arr.find(item =&gt; item.age === 20); // Output {name: 'Jerry', age: 20}&#13;
+```&#13;
+5. Array.prototype.findIndex() : Returns the index of the first element in the array that meets the condition, otherwise returns -1. (Accept the second parameter to specify the starting position of the search) 🥇 &#13;
+```js&#13;
+let arr = [{name: 'Tom', age: 18}, {name: 'Jerry', age: 20}];&#13;
+let index = arr.findIndex(item =&gt; item.age === 20); // Output 1&#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/JS%20-%20Common%20methods%20for%20finding%20elements%20in%20arrays%20%F0%9F%A5%B3.html</guid><pubDate>Thu, 14 Mar 2024 02:22:03 +0000</pubDate></item><item><title>The difference between import and import() (动态导入) 🥴</title><link>https://zhaojjjjjj.github.io/post/The%20difference%20between%20import%20and%20import%28%29%20%28-dong-tai-dao-ru-%29%20%F0%9F%A5%B4.html</link><description>&gt; import 和 import() 函数是 ES6 新增的两种语法，它们都用于在 JavaScript 中导入模块。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/The%20difference%20between%20import%20and%20import%28%29%20%28-dong-tai-dao-ru-%29%20%F0%9F%A5%B4.html</guid><pubDate>Thu, 14 Mar 2024 02:04:57 +0000</pubDate></item><item><title>Vue3 - Transitions between conditionals (v-if and v-else) 🫠</title><link>https://zhaojjjjjj.github.io/post/Vue3%20-%20Transitions%20between%20conditionals%20%28v-if%20and%20v-else%29%20%F0%9F%AB%A0.html</link><description>&gt; Note: When the names of two switching components are the same, a key attribute needs to be added to distinguish the two components, otherwise the animation will not take effect&#13;
+```html&#13;
+&lt;div&gt;&#13;
+    &lt;transition name='fade'&gt;&#13;
+        &lt;p key=1 v-if='show'&gt;hello&lt;/p&gt;&#13;
+        &lt;p key=2 v-else&gt;hi&lt;/p&gt;&#13;
+    &lt;/transition&gt;&#13;
+&lt;/div&gt;&#13;
+```&#13;
+```css&#13;
+.fade-enter-active,&#13;
+.fade-leave-active {&#13;
+    transition: opacity .5s&#13;
+}&#13;
+&#13;
+.fade-enter,&#13;
+.fade-leave-to {&#13;
+    opacity: 0&#13;
+}&#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue3%20-%20Transitions%20between%20conditionals%20%28v-if%20and%20v-else%29%20%F0%9F%AB%A0.html</guid><pubDate>Wed, 13 Mar 2024 05:39:45 +0000</pubDate></item><item><title>Nginx startup failed, port 80 is occupied, kill process cannot be dropped 🫨</title><link>https://zhaojjjjjj.github.io/post/Nginx%20startup%20failed%2C%20port%2080%20is%20occupied%2C%20kill%20process%20cannot%20be%20dropped%20%F0%9F%AB%A8.html</link><description>- Nginx startup failed, prompt that port 80 is occupied&#13;
+```&#13;
+nginx: [emerg] bind() to 0.0.0.0:8080 failed (48: Address already in use) &#13;
+nginx: [emerg] bind() to 0.0.0.0:8080 failed (48: Address already in use) &#13;
+nginx: [emerg] bind() to 0.0.0.0:8080 failed (48: Address already in use) &#13;
+nginx: [emerg] bind() to 0.0.0.0:8080 failed (48: Address already in use) &#13;
+nginx: [emerg] bind() to 0.0.0.0:8080 failed (48: Address already in use) &#13;
+nginx: [emerg] still could not bind()&#13;
+```&#13;
+&gt; I tried multiple methods, including finding a process, killing a process, and using the network monitor to find a process, but none of them were successful.&#13;
+- Final solution&#13;
+```&#13;
+lsof -iTCP -sTCP:LISTEN -P | grep :80&#13;
+```&#13;
+&gt; Find which process is listening on port 80&#13;
+&#13;
+&gt; If there is no lsof, install lsof first&#13;
+```&#13;
+brew install lsof&#13;
+``` &#13;
+- Finally, kill the process&#13;
+```&#13;
+sudo kill  PID &#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Nginx%20startup%20failed%2C%20port%2080%20is%20occupied%2C%20kill%20process%20cannot%20be%20dropped%20%F0%9F%AB%A8.html</guid><pubDate>Wed, 13 Mar 2024 03:40:50 +0000</pubDate></item><item><title>MAC PHP7.4 version installation issue 😶‍🌫️</title><link>https://zhaojjjjjj.github.io/post/MAC%20PHP7.4%20version%20installation%20issue%20%F0%9F%98%B6%E2%80%8D%F0%9F%8C%AB%EF%B8%8F.html</link><description>- 安装 PHP7.4 版本不成功&#13;
+&gt; Error: php@7.4 has been disabled because it is a versioned formula!&#13;
+&#13;
+&gt; 因为php7.4官方已经不再维护，所以Hombrew将该php版本移出了repository，所以安装不了。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/MAC%20PHP7.4%20version%20installation%20issue%20%F0%9F%98%B6%E2%80%8D%F0%9F%8C%AB%EF%B8%8F.html</guid><pubDate>Tue, 12 Mar 2024 01:13:47 +0000</pubDate></item><item><title>Config .prettier 🫣</title><link>https://zhaojjjjjj.github.io/post/Config%20.prettier%20%F0%9F%AB%A3.html</link><description>&gt; Config import auto aligned&#13;
+```&#13;
+npm install --save-dev @trivago/prettier-plugin-sort-imports&#13;
+```&#13;
+```&#13;
+.prettierrc&#13;
+&#13;
+{&#13;
+    'printWidth': 400,&#13;
+    'tabWidth': 4,&#13;
+    'useTabs': false,&#13;
+    'semi': true,&#13;
+    'bracketSameLine': true,&#13;
+    'quoteProps': 'preserve',&#13;
+    'trailingComma': 'all',&#13;
+    'singleQuote': true,&#13;
+    'importOrderSeparation': true,&#13;
+    'importOrderSortSpecifiers': true,&#13;
+    'plugins': ['@trivago/prettier-plugin-sort-imports'],&#13;
+    'importOrder': ['^@core/(.*)$', '&lt;THIRD_PARTY_MODULES&gt;', '^@ui/(.*)$', '^[./]']&#13;
+}&#13;
+```&#13;
+。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Config%20.prettier%20%F0%9F%AB%A3.html</guid><pubDate>Mon, 11 Mar 2024 12:48:37 +0000</pubDate></item><item><title>Vue3 use $ref() grammar 🤩</title><link>https://zhaojjjjjj.github.io/post/Vue3%20use%20%24ref%28%29%20grammar%20%F0%9F%A4%A9.html</link><description>1. **INSTALL**&#13;
+```&#13;
+npm i @vue-macros/reactivity-transform&#13;
+```&#13;
+2. **CONFIG**&#13;
+```javascript&#13;
+vite.config.js&#13;
+&#13;
+import ReactivityTransform from '@vue-macros/reactivity-transform/vite'; &#13;
+export default defineConfig({ &#13;
+       plugins: [vue({ refTransform: true }),  ReactivityTransform()],&#13;
+})&#13;
+```&#13;
+```js&#13;
+uniapp 单页面中不用引入 $ref&#13;
+import { defineConfig } from 'vite';&#13;
+import uni from '@dcloudio/vite-plugin-uni';&#13;
+&#13;
+export default defineConfig({&#13;
+	plugins: [&#13;
+		uni({&#13;
+			vueOptions: {&#13;
+				reactivityTransform: true,&#13;
+			},&#13;
+		}),&#13;
+	],&#13;
+});&#13;
+```&#13;
+3. **IMPORT**&#13;
+```javascript&#13;
+&lt;script setup&gt;&#13;
+import { $ref } from '@vue-macros/reactivity-transform/macros';&#13;
+&lt;script&gt;&#13;
+```&#13;
+&gt; [!TIP]&#13;
+&gt; EXAMPLE &#13;
+```javascript&#13;
+let msg = ref('hello')&#13;
+console.log(msg.value) // hello&#13;
+ &#13;
+let msg = $ref('hello')&#13;
+console.log(msg) // hello&#13;
+```&#13;
+。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue3%20use%20%24ref%28%29%20grammar%20%F0%9F%A4%A9.html</guid><pubDate>Mon, 11 Mar 2024 10:45:26 +0000</pubDate></item><item><title>Vue3 auto import ref reactive...😋</title><link>https://zhaojjjjjj.github.io/post/Vue3%20auto%20import%20ref%20reactive...%F0%9F%98%8B.html</link><description>```&#13;
+npm i unplugin-auto-import -D&#13;
+```&#13;
+- vite.config.js&#13;
+```&#13;
+import { defineConfig } from 'vite';&#13;
+import vue from '@vitejs/plugin-vue';&#13;
+import AutoImport from 'unplugin-auto-import/vite';&#13;
+ &#13;
+export default defineConfig({&#13;
+  plugins: [&#13;
+    vue(),&#13;
+    AutoImport({&#13;
+      // auto import Vue function,example:ref, reactive ...&#13;
+      imports: ['vue', 'vue-router'],&#13;
+    }),&#13;
+  ],&#13;
+});&#13;
+```&#13;
+***&#13;
+&#13;
+&gt; Q : typescript ERROR：‘reactive’ is not defined.&#13;
+&#13;
+&gt; A :  Configure and generate auto-imports.d.ts in vite ,import in tsconfig.json &#13;
+- vite.config.js&#13;
+```&#13;
+export default defineConfig({&#13;
+  plugins: [&#13;
+    vue(),&#13;
+    AutoImport({&#13;
+     // auto import Vue function,example:ref, reactive ...&#13;
+      imports: ['vue'],&#13;
+      // generate an automatically imported TS declaration file&#13;
+       dts: '/auto-import.d.ts', &#13;
+    }),&#13;
+  ],&#13;
+});&#13;
+```&#13;
+- tsconfig.json&#13;
+```&#13;
+{&#13;
+     'include': [&#13;
+        'src/**/*.d.ts',&#13;
+        './*.d.ts',&#13;
+        './auto-imports.d.ts' // import the configuration file generated in the previous step&#13;
+      ],&#13;
+}&#13;
+```&#13;
+***&#13;
+&#13;
+&gt; Q: eslint error ‘reactive’ is not defined no-undef&#13;
+&#13;
+&gt; A: automatically import the corresponding eslint rules without configuration, generate the corresponding. eslintrc auto import. json configuration file through the configuration in autoimport, and introduce it in. eslintrc&#13;
+- vite.config.js&#13;
+```&#13;
+{&#13;
+    // ......&#13;
+     AutoImport({&#13;
+      imports: ['vue'],&#13;
+      dts: '/auto-import.d.ts',&#13;
+      eslintrc: {&#13;
+        enabled: true,  // 1. Change to true for generating eslint configuration. 2. Change back to false after generation to avoid duplicate generation&#13;
+      },&#13;
+    }),&#13;
+}&#13;
+```&#13;
+- .eslintrc.js&#13;
+```&#13;
+extends: [&#13;
+   './.eslintrc-auto-import.json',&#13;
+ ],&#13;
+```&#13;
+&#13;
+。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Vue3%20auto%20import%20ref%20reactive...%F0%9F%98%8B.html</guid><pubDate>Mon, 11 Mar 2024 10:31:01 +0000</pubDate></item><item><title>Use vite to build and move index.html to... 🫡</title><link>https://zhaojjjjjj.github.io/post/Use%20vite%20to%20build%20and%20move%20index.html%20to...%20%F0%9F%AB%A1.html</link><description>- package.json&#13;
+```&#13;
+'scripts': {&#13;
+    'build': 'vite build &amp;&amp; mv ../think/public/static/wxmp/index.html ../think/view/wxmp/home_index.html', // Move to specified location&#13;
+}&#13;
+```&#13;
+- vite.config.js&#13;
+```&#13;
+base: '/static/wxmp', // Change static resource paths&#13;
+&#13;
+build: {&#13;
+    outDir: '../think/public/static/wxmp', // Packaging location&#13;
+    minify: true, // Whether to compress&#13;
+}&#13;
+```。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Use%20vite%20to%20build%20and%20move%20index.html%20to...%20%F0%9F%AB%A1.html</guid><pubDate>Fri, 08 Mar 2024 09:33:18 +0000</pubDate></item><item><title>Switch NPM images at any time 🤔</title><link>https://zhaojjjjjj.github.io/post/Switch%20NPM%20images%20at%20any%20time%20%F0%9F%A4%94.html</link><description>&gt; Global install nrm&#13;
+&#13;
+&gt; NPM error message during Mac installation may be due to insufficient permissions. Add ***sudo*** before the command&#13;
+```&#13;
+npm install -g nrm  /  sudo npm install -g nrm&#13;
+```&#13;
+&gt; View all mirrors&#13;
+```&#13;
+nrm ls &#13;
+```&#13;
+&gt; Example&#13;
+```&#13;
+@sdeMacBook-Pro ~ % nrm ls&#13;
+  npm ---------- https://registry.npmjs.org/&#13;
+  yarn --------- https://registry.yarnpkg.com/&#13;
+  tencent ------ https://mirrors.cloud.tencent.com/npm/&#13;
+  cnpm --------- https://r.cnpmjs.org/&#13;
+  taobao ------- https://registry.npmmirror.com/&#13;
+  npmMirror ---- https://skimdb.npmjs.com/registry/&#13;
+&#13;
+@sdeMacBook-Pro ~ % nrm use taobao  // Change to taobao&#13;
+```&#13;
+。</description><guid isPermaLink="true">https://zhaojjjjjj.github.io/post/Switch%20NPM%20images%20at%20any%20time%20%F0%9F%A4%94.html</guid><pubDate>Fri, 08 Mar 2024 09:07:16 +0000</pubDate></item></channel></rss>

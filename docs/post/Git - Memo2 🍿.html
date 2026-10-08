@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="### 查看远程仓库
+
+查看已经配置的远程仓库服务器，可以运行 `git remote` 命令。">
+<meta property="og:title" content="Git - Memo2 🍿">
+<meta property="og:description" content="### 查看远程仓库
+
+查看已经配置的远程仓库服务器，可以运行 `git remote` 命令。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://zhaojjjjjj.github.io/post/Git%20-%20Memo2%20%F0%9F%8D%BF.html">
+<meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
+<title>Git - Memo2 🍿</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Git - Memo2 🍿</h1>
+<div class="title-right">
+    <a href="https://zhaojjjjjj.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/Zhaojjjjjj/zhaojjjjjj.github.io/issues/36" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h3>查看远程仓库</h3>
+<p>查看已经配置的远程仓库服务器，可以运行 <code class="notranslate">git remote</code> 命令。 它会列出指定的每一个远程服务器的简写。 如果已经克隆了自己的仓库，那么至少应该能看到 origin ——这是 Git 给你克隆的仓库服务器的默认名字：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git clone https://github.com/schacon/ticgit</span>
+<span class="pl-c1">Cloning into 'ticgit'...</span>
+<span class="pl-c1">remote: Reusing existing pack: 1857, done.</span>
+<span class="pl-c1">remote: Total 1857 (delta 0), reused 0 (delta 0)</span>
+<span class="pl-c1">Receiving objects: 100% (1857/1857), 374.35 KiB | 268.00 KiB/s, done.</span>
+<span class="pl-c1">Resolving deltas: 100% (772/772), done.</span>
+<span class="pl-c1">Checking connectivity... done.</span>
+$ <span class="pl-s1"><span class="pl-c1">cd</span> ticgit</span>
+$ <span class="pl-s1">git remote</span>
+<span class="pl-c1">origin</span></pre></div>
+<p>也可以指定选项 <code class="notranslate">-v</code>，会显示需要读写远程仓库使用的 Git 保存的简写与其对应的 URL。</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git remote -v</span>
+<span class="pl-c1">origin	https://github.com/schacon/ticgit (fetch)</span>
+<span class="pl-c1">origin	https://github.com/schacon/ticgit (push)</span></pre></div>
+<p>如果远程仓库不止一个，该命令会将它们全部列出。 例如，与几个协作者合作的，拥有多个远程仓库的仓库看起来像下面这样：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1"><span class="pl-c1">cd</span> grit</span>
+$ <span class="pl-s1">git remote -v</span>
+<span class="pl-c1">bakkdoor  https://github.com/bakkdoor/grit (fetch)</span>
+<span class="pl-c1">bakkdoor  https://github.com/bakkdoor/grit (push)</span>
+<span class="pl-c1">cho45     https://github.com/cho45/grit (fetch)</span>
+<span class="pl-c1">cho45     https://github.com/cho45/grit (push)</span>
+<span class="pl-c1">defunkt   https://github.com/defunkt/grit (fetch)</span>
+<span class="pl-c1">defunkt   https://github.com/defunkt/grit (push)</span>
+<span class="pl-c1">koke      git://github.com/koke/grit.git (fetch)</span>
+<span class="pl-c1">koke      git://github.com/koke/grit.git (push)</span>
+<span class="pl-c1">origin    git@github.com:mojombo/grit.git (fetch)</span>
+<span class="pl-c1">origin    git@github.com:mojombo/grit.git (push)</span></pre></div>
+<p>这表示能非常方便地拉取其它用户的贡献。还可以拥有向他们推送的权限</p>
+<h3>添加远程仓库</h3>
+<p>运行 <code class="notranslate">git remote add &lt;shortname&gt; &lt;url&gt;</code> 添加一个新的远程 Git 仓库，同时指定一个方便使用的简写：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git remote</span>
+<span class="pl-c1">origin</span>
+$ <span class="pl-s1">git remote add pb https://github.com/paulboone/ticgit</span>
+$ <span class="pl-s1">git remote -v</span>
+<span class="pl-c1">origin	https://github.com/schacon/ticgit (fetch)</span>
+<span class="pl-c1">origin	https://github.com/schacon/ticgit (push)</span>
+<span class="pl-c1">pb	https://github.com/paulboone/ticgit (fetch)</span>
+<span class="pl-c1">pb	https://github.com/paulboone/ticgit (push)</span></pre></div>
+<p>现在可以在命令行中使用字符串 <code class="notranslate">pb</code> 来代替整个 URL。 例如，如果想拉取 Paul 的仓库中有但本地没有的信息，可以运行 <code class="notranslate">git fetch pb</code>：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git fetch pb</span>
+<span class="pl-c1">remote: Counting objects: 43, done.</span>
+<span class="pl-c1">remote: Compressing objects: 100% (36/36), done.</span>
+<span class="pl-c1">remote: Total 43 (delta 10), reused 31 (delta 5)</span>
+<span class="pl-c1">Unpacking objects: 100% (43/43), done.</span>
+<span class="pl-c1">From https://github.com/paulboone/ticgit</span>
+<span class="pl-c1"> * [new branch]      master     -&gt; pb/master</span>
+<span class="pl-c1"> * [new branch]      ticgit     -&gt; pb/ticgit</span></pre></div>
+<p>现在 Paul 的 master 分支可以在本地通过 <code class="notranslate">pb/master</code> 访问到——可以将它合并到自己的某个分支中， 或者如果想要查看它的话，可以检出一个指向该点的本地分支</p>
+<h3>从远程仓库中抓取与拉取</h3>
+<p>从远程仓库中获得数据，可以执行：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git fetch <span class="pl-k">&lt;</span>remote<span class="pl-k">&gt;</span></span></pre></div>
+<p>这个命令会访问远程仓库，从中拉取所有还没有的数据。 执行完成后，将会拥有那个远程仓库中所有分支的引用，可以随时合并或查看。</p>
+<p>如果使用 <code class="notranslate">clone</code> 命令克隆了一个仓库，命令会自动将其添加为远程仓库并默认以 “origin” 为简写。 所以，<code class="notranslate">git fetch origin</code> 会抓取克隆（或上一次抓取）后新推送的所有工作。 必须注意 <code class="notranslate">git fetch</code> 命令只会将数据下载到本地仓库——它并不会自动合并或修改你当前的工作。 当准备好时必须手动将其合并入你的工作。</p>
+<p>如果当前分支设置了跟踪远程分支， 那么可以用 <code class="notranslate">git pull</code> 命令来自动抓取后合并该远程分支到当前分支。 这或许是个更加简单舒服的工作流程。默认情况下，<code class="notranslate">git clone</code> 命令会自动设置本地 master 分支跟踪克隆的远程仓库的 <code class="notranslate">master</code> 分支（或其它名字的默认分支）。 运行 <code class="notranslate">git pull</code> 通常会从最初克隆的服务器上抓取数据并自动尝试合并到当前所在的分支。</p>
+<h3>推送到远程仓库</h3>
+<p>当分享你的项目时，必须将其推送到上游。 这个命令很简单：<code class="notranslate">git push &lt;remote&gt; &lt;branch&gt;</code>。 当想要将 <code class="notranslate">master</code> 分支推送到 <code class="notranslate">origin</code> 服务器时（再次说明，克隆时通常会自动帮你设置好那两个名字）， 那么运行这个命令就可以将你所做的备份到服务器：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git push origin master</span></pre></div>
+<p>只有当你有所克隆服务器的写入权限，并且之前没有人推送过时，这条命令才能生效。 当你和其他人在同一时间克隆，他们先推送到上游然后你再推送到上游，你的推送就会毫无疑问地被拒绝。 你必须先抓取他们的工作并将其合并进你的工作后才能推送</p>
+<h3>查看某个远程仓库</h3>
+<p>如果想要查看某一个远程仓库的更多信息，可以使用 <code class="notranslate">git remote show &lt;remote&gt;</code> 命令。 如果想以一个特定的缩写名运行这个命令，例如 <code class="notranslate">origin</code>，会得到像下面类似的信息：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git remote show origin</span>
+<span class="pl-c1">* remote origin</span>
+<span class="pl-c1">  Fetch URL: https://github.com/schacon/ticgit</span>
+<span class="pl-c1">  Push  URL: https://github.com/schacon/ticgit</span>
+<span class="pl-c1">  HEAD branch: master</span>
+<span class="pl-c1">  Remote branches:</span>
+<span class="pl-c1">    master                               tracked</span>
+<span class="pl-c1">    dev-branch                           tracked</span>
+<span class="pl-c1">  Local branch configured for 'git pull':</span>
+<span class="pl-c1">    master merges with remote master</span>
+<span class="pl-c1">  Local ref configured for 'git push':</span>
+<span class="pl-c1">    master pushes to master (up to date)</span></pre></div>
+<p>它同样会列出远程仓库的 URL 与跟踪分支的信息。 这些信息非常有用，它告诉你正处于 <code class="notranslate">master</code> 分支，并且如果运行 <code class="notranslate">git pull</code>， 就会抓取所有的远程引用，然后将远程 <code class="notranslate">master</code> 分支合并到本地 <code class="notranslate">master</code> 分支。 它也会列出拉取到的所有远程引用。</p>
+<p>这是一个经常遇到的简单例子。 如果你是 Git 的重度使用者，那么还可以通过 <code class="notranslate">git remote show</code> 看到更多的信息。</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git remote show origin</span>
+<span class="pl-c1">* remote origin</span>
+<span class="pl-c1">  URL: https://github.com/my-org/complex-project</span>
+<span class="pl-c1">  Fetch URL: https://github.com/my-org/complex-project</span>
+<span class="pl-c1">  Push  URL: https://github.com/my-org/complex-project</span>
+<span class="pl-c1">  HEAD branch: master</span>
+<span class="pl-c1">  Remote branches:</span>
+<span class="pl-c1">    master                           tracked</span>
+<span class="pl-c1">    dev-branch                       tracked</span>
+<span class="pl-c1">    markdown-strip                   tracked</span>
+<span class="pl-c1">    issue-43                         new (next fetch will store in remotes/origin)</span>
+<span class="pl-c1">    issue-45                         new (next fetch will store in remotes/origin)</span>
+<span class="pl-c1">    refs/remotes/origin/issue-11     stale (use 'git remote prune' to remove)</span>
+<span class="pl-c1">  Local branches configured for 'git pull':</span>
+<span class="pl-c1">    dev-branch merges with remote dev-branch</span>
+<span class="pl-c1">    master     merges with remote master</span>
+<span class="pl-c1">  Local refs configured for 'git push':</span>
+<span class="pl-c1">    dev-branch                     pushes to dev-branch                     (up to date)</span>
+<span class="pl-c1">    markdown-strip                 pushes to markdown-strip                 (up to date)</span>
+<span class="pl-c1">    master                         pushes to master                         (up to date)</span></pre></div>
+<p>这个命令列出了当你在特定的分支上执行 <code class="notranslate">git push</code> 会自动地推送到哪一个远程分支。 它也同样地列出了哪些远程分支不在你的本地，哪些远程分支已经从服务器上移除了， 还有当你执行 <code class="notranslate">git pull</code> 时哪些本地分支可以与它跟踪的远程分支自动合并。</p>
+<h3>远程仓库的重命名与移除</h3>
+<p>可以运行 <code class="notranslate">git remote rename</code> 来修改一个远程仓库的简写名。 例如，想要将 <code class="notranslate">pb</code> 重命名为 <code class="notranslate">paul</code>，可以用 <code class="notranslate">git remote rename</code> 这样做：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git remote rename pb paul</span>
+$ <span class="pl-s1">git remote</span>
+<span class="pl-c1">origin</span>
+<span class="pl-c1">paul</span></pre></div>
+<p>值得注意的是这同样也会修改你所有远程跟踪的分支名字。 那些过去引用 <code class="notranslate">pb/master</code> 的现在会引用 <code class="notranslate">paul/master</code>。</p>
+<p>如果因为一些原因想要移除一个远程仓库——你已经从服务器上搬走了或不再想使用某一个特定的镜像了， 又或者某一个贡献者不再贡献了——可以使用 <code class="notranslate">git remote remove</code> 或 <code class="notranslate">git remote rm</code> ：</p>
+<div class="highlight highlight-text-shell-session"><pre class="notranslate">$ <span class="pl-s1">git remote remove paul</span>
+$ <span class="pl-s1">git remote</span>
+<span class="pl-c1">origin</span></pre></div>
+<p>一旦你使用这种方式删除了一个远程仓库，那么所有和这个远程仓库相关的远程跟踪分支以及配置信息也会一起被删除。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://zhaojjjjjj.github.io">zhaojjjjjj</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","Zhaojjjjjj/zhaojjjjjj.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
