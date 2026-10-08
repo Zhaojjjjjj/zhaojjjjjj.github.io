@@ -79,12 +79,10 @@ a{color:var(--accent-ink);text-decoration:none}
 </style>
 
 <style>
-.hero{padding:64px 0 12px}
-.eyebrow{font-size:12px;font-weight:700;letter-spacing:.22em;color:var(--accent);margin:0 0 14px}
-.lede{font-size:21px;line-height:1.65;color:var(--ink2);margin:0;max-width:34em;letter-spacing:-.01em}
-.lede strong{color:var(--ink);font-weight:700}
-.meta-line{margin-top:18px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.meta-line .dot{width:3px;height:3px;border-radius:50%;background:var(--muted)}
+.hero{padding:60px 0 18px;display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.22em;color:var(--accent);margin:0}
+.total{font-size:13px;color:var(--muted);white-space:nowrap}
+.total b{color:var(--ink);font-weight:700}
 .posts{margin:34px 0 8px;border-top:1px solid var(--line)}
 .post-row{display:flex;align-items:baseline;gap:18px;padding:17px 6px;border-bottom:1px solid var(--line);border-radius:8px}
 .post-row:hover{background:var(--soft)}
@@ -97,8 +95,7 @@ a{color:var(--accent-ink);text-decoration:none}
 .pager a:hover{border-color:var(--accent);color:var(--accent-ink)}
 .pager .disabled{opacity:.35;pointer-events:none}
 @media (max-width:640px){
-  .hero{padding:44px 0 6px}
-  .lede{font-size:18px}
+  .hero{padding:44px 0 12px}
   .post-row{flex-wrap:wrap;gap:6px 12px}
   .post-row .date{min-width:0;order:2}
   .post-row .ttl{order:1;flex-basis:100%;white-space:normal}
@@ -123,8 +120,7 @@ a{color:var(--accent-ink);text-decoration:none}
 <main class="wrap">
 <section class="hero">
   <p class="eyebrow">TECH NOTES</p>
-  <p class="lede">个人技术博客</p>
-  <div class="meta-line"><span>15 篇文章</span><span class="dot"></span><span>持续更新中</span></div>
+  <span class="total">共 <b>44</b> 篇</span>
 </section>
 <section class="posts">
 <a class="post-row" href="post/AI%20-%20-cheng-xu-hua-shi-pin-%20vs%20-xiang-su-shi-pin-%EF%BC%9A-liang-tiao-%20AI%20-sheng-shi-pin-lu-xian-dui-bi-%20%F0%9F%A7%AC.html">
