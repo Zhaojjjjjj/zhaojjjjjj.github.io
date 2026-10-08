@@ -6,13 +6,13 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> 断更回填 · 2025 年 5 月 AI 技术月报。">
-<meta property="og:title" content="AI - 2025年5月 AI 技术月报 📰">
-<meta property="og:description" content="> 断更回填 · 2025 年 5 月 AI 技术月报。">
+<meta name="description" content="> 2025 年春天，AI 编程从'补全'跨进了'自主循环'时代：Cursor Agent、Claude Code 让模型自己读文件、改代码、跑测试。">
+<meta property="og:title" content="工程化 - AI 编程 Agent 的工作原理：从补全到自主循环 🔄">
+<meta property="og:description" content="> 2025 年春天，AI 编程从'补全'跨进了'自主循环'时代：Cursor Agent、Claude Code 让模型自己读文件、改代码、跑测试。">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%202025-nian-5-yue-%20AI%20-ji-shu-yue-bao-%20%F0%9F%93%B0.html">
+<meta property="og:url" content="https://zhaojjjjjj.github.io/post/gong-cheng-hua-%20-%20AI%20-bian-cheng-%20Agent%20-de-gong-zuo-yuan-li-%EF%BC%9A-cong-bu-quan-dao-zi-zhu-xun-huan-%20%F0%9F%94%84.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
-<title>AI - 2025年5月 AI 技术月报 📰</title>
+<title>工程化 - AI 编程 Agent 的工作原理：从补全到自主循环 🔄</title>
 
 
 
@@ -113,7 +113,7 @@ a{color:var(--accent-ink);text-decoration:none}
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8 8 2.5 13.5 8"/><path d="M4.5 6.8V13.5h7V6.8"/></svg>
 </a>
 
-<a href="https://github.com/Zhaojjjjjj/zhaojjjjjj.github.io/issues/48" target="_blank" title="Issue" aria-label="Issue">
+<a href="https://github.com/Zhaojjjjjj/zhaojjjjjj.github.io/issues/54" target="_blank" title="Issue" aria-label="Issue">
   <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.36c-2.24.49-2.71-1.08-2.71-1.08-.37-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.96 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
 </a>
 
@@ -123,32 +123,45 @@ a{color:var(--accent-ink);text-decoration:none}
 <article>
   <header class="article-head">
     <div class="tags" id="article-tags"></div>
-    <h1 class="article-title">AI - 2025年5月 AI 技术月报 📰</h1>
+    <h1 class="article-title">工程化 - AI 编程 Agent 的工作原理：从补全到自主循环 🔄</h1>
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
   <div class="article-body prose"><blockquote>
-<p>断更回填 · 2025 年 5 月 AI 技术月报。</p>
+<p>2025 年春天，AI 编程从"补全"跨进了"自主循环"时代：Cursor Agent、Claude Code 让模型自己读文件、改代码、跑测试。这篇拆开这个循环，讲讲它到底是怎么转起来的，以及工程上真正的难点在哪。</p>
 </blockquote>
-<h2>大模型</h2>
+<h2>从补全到循环：范式变了</h2>
+<p>Copilot 时代：<code class="notranslate">tab</code> 补全，模型是"高级输入法"。</p>
+<p>Agent 时代：你给一个目标（"把登录页的暗色模式修了"），模型自主规划、执行、验证。核心是一个循环：</p>
+<pre class="notranslate"><code class="notranslate">while not done:
+    observation = 感知（读文件、看报错）
+    thought     = 推理（下一步干什么）
+    action      = 行动（调工具：读/写/跑命令）
+</code></pre>
+<p>这就是 <strong>ReAct</strong>（Reason + Act）模式，2022 年的论文，2025 年的工程。</p>
+<h2>循环的四个部件</h2>
+<ol>
+<li><strong>工具（Tools）</strong>：read、write、edit、bash、grep。Agent 的"手"。工具设计是门艺术：粒度太粗（"重构整个项目"）模型hold不住，太细（每次只读一行）token 烧不起。</li>
+<li><strong>上下文管理</strong>：每次循环都把历史塞进 prompt，窗口再长也会爆。Claude Code 的解法是<strong>自动 compaction</strong>：上下文快满时，让模型自己总结一份备忘录，然后开新窗口继续。这是 2025 年 Agent 工程最重要的 trick 之一。</li>
+<li><strong>终止条件</strong>：什么时候算"做完了"？靠模型自己判断 + 规则兜底（最大步数、测试通过）。无限循环是真实发生过的 bug。</li>
+<li><strong>验证闭环</strong>：跑测试、看 lint。没有验证的 Agent 就是在随机改代码——"能跑"和"跑对"是两回事。</li>
+</ol>
+<h2>为什么 2025 年才爆发</h2>
+<p>三个条件同时成熟：</p>
 <ul>
-<li><strong>Claude Opus 4 / Sonnet 4</strong>（5/22）：混合推理架构（即时响应 / 深度思考一键切换），Agent 与长时任务能力跃升，被开发者称为"AI 编程革命"。Claude Code 收入随后涨了 5.5 倍。</li>
-<li><strong>Mistral Medium 3</strong>：主打性价比的闭源中型模型，欧洲厂商继续错位竞争。</li>
-<li><strong>Phi-4-Reasoning</strong>：微软的推理模型系列（含 Plus / Mini），小模型推理也开始卷。</li>
+<li><strong>模型 tool calling 可靠性</strong>：Sonnet 3.7/4 的工具调用准确率过了可用线。之前的模型调工具像扔骰子。</li>
+<li><strong>长上下文</strong>：200K 上下文让 Agent 能"记住"整个任务现场。</li>
+<li><strong>MCP</strong>：工具生态标准化，Agent 的"手"变多了（见上一篇）。</li>
 </ul>
-<h2>Google I/O</h2>
-<ul>
-<li><strong>Gemini 2.5 Pro Deep Think</strong>：深度思考模式上线。</li>
-<li><strong>Veo 3</strong>：首个原生带音频的视频生成模型，演示里人物开口说话那一下，全场起立。</li>
-<li><strong>Imagen 4</strong>：图像模型同步更新，Google 的多模态全家桶齐了。</li>
-</ul>
-<h2>国产</h2>
-<ul>
-<li><strong>豆包 Seed1.5-VL</strong>：字节的多模态推理模型。</li>
-<li><strong>MiniMax Speech-02</strong>：语音模型升级，MiniMax 在音频线默默加码。</li>
-</ul>
+<h2>工程上的真难点</h2>
+<ol>
+<li><strong>上下文污染</strong>：一次失败的尝试会污染后续推理。好的 Agent 要会"遗忘"——把死胡同的探索从历史中摘掉。</li>
+<li><strong>成本</strong>：一个复杂任务烧掉几十万 token 是常态。按量计费下，Agent 的 ROI 需要仔细算。</li>
+<li><strong>"70% 问题"</strong>：Agent 能搞定 70% 的任务，剩下 30% 需要人接手——而判断"这 30% 是哪部分"本身就需要专家。</li>
+<li><strong>Review 负担</strong>：AI 一分钟写 500 行，你 review 要半小时。生成速度和审查速度的剪刀差，是 Agent 落地最大的隐性成本。</li>
+</ol>
 <h2>一句话总结</h2>
-<p>5 月属于 Anthropic 和 Google：Claude 4 重新定义了 Agent 编程，I/O 则把视频生成带进了"有声时代"。</p>
-<p>##{"timestamp":1748664000,"style":".markdown-body&gt;:last-child{display:none}"}</p></div>
+<p>AI 编程 Agent 的本质是"ReAct 循环 + 工具 + 上下文工程"。2025 年的爆发不是某个单点突破，而是模型可靠性、长上下文、工具生态三条曲线同时越过可用阈值。但别被 demo 骗了：真正的成本不在生成，在 review——而这一点，短期内不会变。</p>
+<p>##{"timestamp":1745899200,"style":".markdown-body&gt;:last-child{display:none}"}</p></div>
   <div class="article-tail"></div>
   
   <button type="button" id="cmButton" onclick="openComments()">评论</button>
@@ -166,10 +179,18 @@ a{color:var(--accent-ink);text-decoration:none}
   <span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank" rel="noopener">Gmeek</a></span>
 </div>
 <script>document.getElementById('cy').textContent=new Date().getFullYear();</script></div></footer>
-<script>var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};var utterancesLoad=0;</script>
+<script>var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};var utterancesLoad=0;</script>
 
 <script>
 (function(){
+  // Remove Gmeek backdate config line rendered as a paragraph: ##{"timestamp":...}
+  try{
+    var mb=document.querySelector('.markdown-body');
+    if(mb){var ps=mb.querySelectorAll('p');
+      for(var i=0;i<ps.length;i++){
+        if(/^##\{"timestamp":\d+/.test(ps[i].textContent.trim())){ps[i].remove();}
+      }}
+  }catch(e){}
   var meta=document.getElementById('article-meta');if(!meta)return;
   var file=decodeURIComponent(location.pathname.split('/').pop());
   fetch('/postList.json').then(function(r){return r.json();}).then(function(d){

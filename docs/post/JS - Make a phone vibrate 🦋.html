@@ -200,6 +200,14 @@ a{color:var(--accent-ink);text-decoration:none}
 
 <script>
 (function(){
+  // Remove Gmeek backdate config line rendered as a paragraph: ##{"timestamp":...}
+  try{
+    var mb=document.querySelector('.markdown-body');
+    if(mb){var ps=mb.querySelectorAll('p');
+      for(var i=0;i<ps.length;i++){
+        if(/^##\{"timestamp":\d+/.test(ps[i].textContent.trim())){ps[i].remove();}
+      }}
+  }catch(e){}
   var meta=document.getElementById('article-meta');if(!meta)return;
   var file=decodeURIComponent(location.pathname.split('/').pop());
   fetch('/postList.json').then(function(r){return r.json();}).then(function(d){
