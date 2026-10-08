@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<meta name="description" content="{{ blogBase['description'] }}">
+<meta property="og:title" content="{{ blogBase['postTitle'] }}">
+<meta property="og:description" content="{{ blogBase['description'] }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ blogBase['postUrl'] }}">
+<meta property="og:image" content="{{ blogBase['ogImage'] }}">
+<title>{{ blogBase['postTitle'] }}</title>
+{% if blogBase['highlight']==1 %}<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet">{% endif %}
+{{ blogBase['head'] }}
+{% endblock %}
+
+{% block style %}
+<style>
+.article-head{padding:56px 0 8px}
+.article-head .tags{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
+.article-title{font-size:33px;line-height:1.35;letter-spacing:-.02em;font-weight:780;margin:0 0 16px;overflow-wrap:break-word}
+.article-meta{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted)}
+.article-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--muted)}
+.article-body{margin-top:28px;padding-top:8px;border-top:1px solid var(--line)}
+.article-tail{margin-top:10px;font-size:13px;color:var(--muted);text-align:right}
+.back-row{margin:44px 0 8px}
+.back-row a{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink2);padding:10px 18px;border:1px solid var(--line);border-radius:999px}
+.back-row a:hover{border-color:var(--accent);color:var(--accent-ink)}
+.back-row svg{width:15px;height:15px}
+#cmButton{display:block;width:100%;margin-top:56px;padding:15px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:var(--font)}
+#cmButton:hover{border-color:var(--accent);color:var(--accent-ink)}
+#cmButton:disabled{opacity:.6;cursor:default}
+#comments{margin-top:24px}
+.utterances{max-width:100%}
+@media (max-width:640px){
+  .article-head{padding:40px 0 4px}
+  .article-title{font-size:25px}
+}
+</style>
+{{ blogBase['style'] }}
+{% endblock %}
+
+{% block nav %}
+<a href="{{ blogBase['homeUrl'] }}" title="{{ i18n['home'] }}" aria-label="{{ i18n['home'] }}">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8 8 2.5 13.5 8"/><path d="M4.5 6.8V13.5h7V6.8"/></svg>
+</a>
+{% if blogBase['showPostSource']==1 %}
+<a href="{{ blogBase['postSourceUrl'] }}" target="_blank" title="Issue" aria-label="Issue">
+  <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.36c-2.24.49-2.71-1.08-2.71-1.08-.37-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.96 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<article>
+  <header class="article-head">
+    <div class="tags" id="article-tags"></div>
+    <h1 class="article-title">{{ blogBase['postTitle'] }}</h1>
+    <div class="article-meta" id="article-meta" data-comments="{% if blogBase['commentNum']>0 %}{{ blogBase['commentNum'] }}{% endif %}"></div>
+  </header>
+  <div class="article-body prose">{{ blogBase['postBody'] }}</div>
+  <div class="article-tail">{{ blogBase['bottomText'] }}</div>
+  {% if blogBase['needComment']==1 %}
+  <button type="button" id="cmButton" onclick="openComments()">{{ i18n['comments'] }}</button>
+  <div id="comments"></div>
+  {% endif %}
+  <div class="back-row"><a href="{{ blogBase['homeUrl'] }}">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg>
+    全部文章
+  </a></div>
+</article>
+{% endblock %}
+
+{% block script %}
+<script>
+(function(){
+  var meta=document.getElementById('article-meta');if(!meta)return;
+  var file=decodeURIComponent(location.pathname.split('/').pop());
+  fetch('/postList.json').then(function(r){return r.json();}).then(function(d){
+    for(var k in d){var p=d[k];if(!p||!p.postUrl)continue;
+      if(decodeURIComponent(p.postUrl).split('/').pop()===file){
+        var tags=document.getElementById('article-tags');
+        if(tags&&p.labels&&p.labels.length){tags.innerHTML=p.labels.map(function(l){return '<span class="chip">'+l+'</span>';}).join('');}
+        var parts=['<span>'+p.createdDate+'</span>'];
+        var c=meta.getAttribute('data-comments');
+        if(c){parts.push('<span class="dot"></span><span>'+c+' 条评论</span>');}
+        meta.innerHTML=parts.join('');
+        break;
+      }
+    }
+  }).catch(function(){});
+})();
+{% if blogBase['needComment']==1 %}
+function openComments(){
+  var btn=document.getElementById('cmButton');
+  btn.disabled=true; btn.textContent='loading…';
+  var s=document.createElement('script');
+  s.src='https://utteranc.es/client.js';
+  s.setAttribute('repo','{{ blogBase['repoName'] }}');
+  s.setAttribute('issue-term','title');
+  s.setAttribute('theme','github-light');
+  s.setAttribute('crossorigin','anonymous');
+  s.async=true;
+  document.getElementById('comments').appendChild(s);
+  var iv=setInterval(function(){
+    var u=document.getElementsByClassName('utterances');
+    if(u.length===1&&u[0].style.height!==''){utterancesLoad=1;clearInterval(iv);btn.style.display='none';}
+  },200);
+}
+{% endif %}
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.prose pre').forEach(function(pre){
+    if(pre.querySelector('.copybtn'))return;
+    var b=document.createElement('button');
+    b.className='copybtn'; b.type='button'; b.textContent='复制';
+    b.addEventListener('click',function(){
+      var t=pre.innerText;
+      function done(){b.textContent='已复制';setTimeout(function(){b.textContent='复制';},1600);}
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,done);}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}
+    });
+    pre.appendChild(b);
+  });
+});
+</script>
+{{ blogBase['script'] }}
+{% endblock %}

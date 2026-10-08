@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block head %}
+<meta name="description" content="{{ blogBase['title'] }} search page">
+<title>{{ blogBase['title'] }} - 标签</title>
+{% endblock %}
+
+{% block style %}
+<style>
+.tag-head{padding:56px 0 8px}
+.tag-head h1{font-size:29px;letter-spacing:-.02em;margin:0 0 8px;font-weight:780}
+.tag-head p{color:var(--ink2);margin:0 0 26px;font-size:15px}
+.search-row{display:flex;gap:10px;margin-bottom:26px}
+.search-row input{flex:1;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 16px;font-size:15px;font-family:var(--font);outline:none;background:#fff;color:var(--ink)}
+.search-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search-row button{height:46px;padding:0 22px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:14.5px;font-weight:650;cursor:pointer;font-family:var(--font)}
+.search-row button:hover{background:var(--accent-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
+.tchip{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;padding:8px 15px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-family:var(--font)}
+.tchip:hover{border-color:var(--accent);color:var(--accent-ink)}
+.tchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tchip .n{font-size:11.5px;background:var(--soft);border-radius:999px;padding:1px 8px;color:var(--muted);font-weight:700}
+.tchip.on .n{background:rgba(255,255,255,.22);color:#fff}
+.results{border-top:1px solid var(--line)}
+.result-row{display:flex;align-items:baseline;gap:18px;padding:16px 6px;border-bottom:1px solid var(--line);border-radius:8px}
+.result-row:hover{background:var(--soft)}
+.result-row .date{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap;min-width:96px}
+.result-row .ttl{font-size:16px;font-weight:600;color:var(--ink);flex:1;letter-spacing:-.01em}
+.result-row:hover .ttl{color:var(--accent-ink)}
+.notfound{display:none;padding:40px 0;text-align:center;color:var(--muted);font-size:15px}
+@media (max-width:640px){
+  .tag-head{padding:40px 0 4px}
+  .result-row{flex-wrap:wrap;gap:4px 12px}
+  .result-row .date{order:2;min-width:0}
+  .result-row .ttl{order:1;flex-basis:100%}
+}
+</style>
+{% endblock %}
+
+{% block nav %}
+<a href="{{ blogBase['homeUrl'] }}" title="{{ i18n['home'] }}" aria-label="{{ i18n['home'] }}">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8 8 2.5 13.5 8"/><path d="M4.5 6.8V13.5h7V6.8"/></svg>
+</a>
+{% endblock %}
+
+{% block content %}
+<section class="tag-head">
+  <h1 id="tagTitle">标签与搜索</h1>
+  <p>按分类浏览，或直接搜索标题。</p>
+  <div class="search-row">
+    <input id="q" type="search" placeholder="搜索文章标题…" aria-label="Search">
+    <button type="button" onclick="doSearch()">{{ i18n['Search'] }}</button>
+  </div>
+  <div class="chips" id="chips"></div>
+</section>
+<section class="results" id="results"></section>
+<div class="notfound" id="notfound"></div>
+{% endblock %}
+
+{% block script %}
+<script>
+var POSTS=[];
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function render(list){
+  var box=document.getElementById('results');
+  var nf=document.getElementById('notfound');
+  box.innerHTML=list.map(function(p){
+    return '<a class="result-row" href="'+p.postUrl+'"><span class="date">'+p.createdDate+'</span><span class="ttl">'+esc(p.postTitle)+'</span></a>';
+  }).join('');
+  if(!list.length){nf.style.display='block';nf.textContent='没有找到匹配的文章';}
+  else{nf.style.display='none';}
+}
+function setActive(name){
+  document.querySelectorAll('.tchip').forEach(function(c){c.classList.toggle('on',c.dataset.tag===name);});
+}
+function filterTag(name){
+  setActive(name);
+  document.getElementById('q').value='';
+  var t=document.getElementById('tagTitle');
+  if(name==='All'){t.textContent='全部文章';document.title='{{ blogBase['title'] }} - 标签';render(POSTS);}
+  else{t.textContent='标签 · '+name;document.title=name+' - {{ blogBase['title'] }}';render(POSTS.filter(function(p){return p.labels.indexOf(name)!==-1;}));}
+  if(history.replaceState){history.replaceState(null,'','#'+encodeURIComponent(name));}
+}
+function doSearch(){
+  var q=document.getElementById('q').value.trim();
+  setActive('');
+  var t=document.getElementById('tagTitle');
+  if(!q){t.textContent='全部文章';render(POSTS);return;}
+  t.textContent='搜索 · '+q;document.title=q+' - {{ blogBase['title'] }}';
+  var u=q.toUpperCase();
+  render(POSTS.filter(function(p){return p.postTitle.toUpperCase().indexOf(u)!==-1;}));
+  if(history.replaceState){history.replaceState(null,'','#'+encodeURIComponent(q));}
+}
+document.getElementById('q').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
+fetch('postList.json').then(function(r){return r.json();}).then(function(d){
+  for(var k in d){if(k==='labelColorDict')continue;POSTS.push(d[k]);}
+  var counts={'All':POSTS.length};
+  POSTS.forEach(function(p){p.labels.forEach(function(l){counts[l]=(counts[l]||0)+1;});});
+  var names=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];});
+  document.getElementById('chips').innerHTML=names.map(function(n){
+    return '<button type="button" class="tchip" data-tag="'+esc(n)+'" onclick="filterTag(\''+n.replace(/'/g,"\\'")+'\')">'+esc(n)+'<span class="n">'+counts[n]+'</span></button>';
+  }).join('');
+  var init=decodeURIComponent(location.hash.slice(1));
+  if(init&&counts[init]!==undefined&&init!=='All'){filterTag(init);}
+  else if(init){document.getElementById('q').value=init;doSearch();}
+  else{setActive('All');render(POSTS);}
+}).catch(function(){document.getElementById('notfound').style.display='block';document.getElementById('notfound').textContent='加载索引失败';});
+</script>
+{% endblock %}
