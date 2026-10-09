@@ -6,9 +6,9 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> 2025 年春天，AI 编程从'补全'跨进了'自主循环'时代：Cursor Agent、Claude Code 让模型自己读文件、改代码、跑测试。">
+<meta name="description" content="> 上周，同事让 Agent'把 flaky 的测试修好'，然后去吃了个午饭——忘了设最大步数。">
 <meta property="og:title" content="工程化 - AI 编程 Agent 的工作原理：从补全到自主循环 🔄">
-<meta property="og:description" content="> 2025 年春天，AI 编程从'补全'跨进了'自主循环'时代：Cursor Agent、Claude Code 让模型自己读文件、改代码、跑测试。">
+<meta property="og:description" content="> 上周，同事让 Agent'把 flaky 的测试修好'，然后去吃了个午饭——忘了设最大步数。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/gong-cheng-hua-%20-%20AI%20-bian-cheng-%20Agent%20-de-gong-zuo-yuan-li-%EF%BC%9A-cong-bu-quan-dao-zi-zhu-xun-huan-%20%F0%9F%94%84.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
@@ -102,7 +102,7 @@ a{color:var(--accent-ink);text-decoration:none}
   .article-title{font-size:25px}
 }
 </style>
-.markdown-body>:last-child{display:none}
+
 
 </head>
 <body>
@@ -127,41 +127,74 @@ a{color:var(--accent-ink);text-decoration:none}
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
   <div class="article-body prose"><blockquote>
-<p>2025 年春天，AI 编程从"补全"跨进了"自主循环"时代：Cursor Agent、Claude Code 让模型自己读文件、改代码、跑测试。这篇拆开这个循环，讲讲它到底是怎么转起来的，以及工程上真正的难点在哪。</p>
+<p>上周，同事让 Agent"把 flaky 的测试修好"，然后去吃了个午饭——忘了设最大步数。回来时，循环已经跑了 300 多轮：测试没修好，git 历史里多了 40 个"尝试修复 #n"的提交，账单多了几十美元。Agent 没有"累了就停"的概念，它只会一直转，直到你告诉它什么是"够了"。</p>
 </blockquote>
 <h2>从补全到循环：范式变了</h2>
-<p>Copilot 时代：<code class="notranslate">tab</code> 补全，模型是"高级输入法"。</p>
-<p>Agent 时代：你给一个目标（"把登录页的暗色模式修了"），模型自主规划、执行、验证。核心是一个循环：</p>
+<p>Copilot 时代，模型是"高级输入法"：你写一半，它按 tab 补全。关系是<strong>你驱动、它辅助</strong>。</p>
+<p>Agent 时代，你给一个目标（"把登录页的暗色模式修了"），模型自己读文件、改代码、跑测试、看报错、再改。关系反过来了：<strong>它驱动，你监督</strong>。中间那个让它转起来的东西，是一个循环：</p>
 <pre class="notranslate"><code class="notranslate">while not done:
-    observation = 感知（读文件、看报错）
-    thought     = 推理（下一步干什么）
-    action      = 行动（调工具：读/写/跑命令）
+    observation = 感知（读文件、看测试报错、看 diff）
+    thought     = 推理（下一步干什么：先复现还是先改？）
+    action      = 行动（调工具：read / write / edit / bash）
 </code></pre>
-<p>这就是 <strong>ReAct</strong>（Reason + Act）模式，2022 年的论文，2025 年的工程。</p>
-<h2>循环的四个部件</h2>
+<p>这就是 <strong>ReAct</strong>（Reason + Act）——2022 年的论文，2025 年的工程。论文只给了思想，工程补上了让它真正转起来的四个部件。</p>
+<h2>循环的四个部件：每个都是坑</h2>
+<p><strong>1. 工具（Tools）：Agent 的手。</strong> <code class="notranslate">read</code>、<code class="notranslate">write</code>、<code class="notranslate">edit</code>、<code class="notranslate">bash</code>、<code class="notranslate">grep</code>——工具设计是门艺术：粒度太粗（"重构整个项目"），模型 hold 不住，单步的不确定性太高；粒度太细（一次只读一行），token 烧不起，循环 500 轮还没看完一个文件。好的工具集有一个共同特征：<strong>每个工具的"成功"都是可验证的</strong>（读到了文件、测试跑通了），让循环的每一步都有 ground truth 可以对照。</p>
+<p><strong>2. 上下文管理：循环的记忆。</strong> 每一轮都把历史塞进 prompt，窗口再长也会爆。Claude Code 的解法是<strong>自动 compaction</strong>：上下文快满时，让模型自己写一份"备忘录"（做过什么、试过什么、当前结论是什么），然后开一个新窗口继续。这是 2025 年 Agent 工程最重要的 trick 之一——但它有个代价：压缩是有损的，备忘录里没写到的细节，等于从没发生过。所以 <strong>compaction 的质量，直接决定了长任务的上限</strong>。</p>
+<h2>工具设计：Agent 的"手"要趁手</h2>
+<p>工具是循环里最值得投入设计的地方，三个原则：</p>
 <ol>
-<li><strong>工具（Tools）</strong>：read、write、edit、bash、grep。Agent 的"手"。工具设计是门艺术：粒度太粗（"重构整个项目"）模型hold不住，太细（每次只读一行）token 烧不起。</li>
-<li><strong>上下文管理</strong>：每次循环都把历史塞进 prompt，窗口再长也会爆。Claude Code 的解法是<strong>自动 compaction</strong>：上下文快满时，让模型自己总结一份备忘录，然后开新窗口继续。这是 2025 年 Agent 工程最重要的 trick 之一。</li>
-<li><strong>终止条件</strong>：什么时候算"做完了"？靠模型自己判断 + 规则兜底（最大步数、测试通过）。无限循环是真实发生过的 bug。</li>
-<li><strong>验证闭环</strong>：跑测试、看 lint。没有验证的 Agent 就是在随机改代码——"能跑"和"跑对"是两回事。</li>
+<li><strong>幂等优先</strong>：<code class="notranslate">apply_patch</code> 失败重跑不会搞坏文件，而 <code class="notranslate">bash -c "rm ..."</code> 会。Agent 会重试、会走回头路，工具必须经得起"被调两次"。</li>
+<li><strong>报错要讲人话</strong>：工具返回的 error message 会直接进模型的下一轮 prompt。"ENOENT"不如"文件不存在：/path/to/x，你想找的是不是 /path/to/y？"——<strong>好的报错能省掉模型一轮瞎猜</strong>。</li>
+<li><strong>危险操作分级</strong>：读文件随便调，写文件要确认，删文件删库必须人点头。主流工具的 permission 分级（allow / ask / deny）是 2025 年的最佳实践——<strong>权限不是非黑即白，是三档</strong>。</li>
 </ol>
-<h2>为什么 2025 年才爆发</h2>
-<p>三个条件同时成熟：</p>
+<p><strong>3. 终止条件：什么时候算"做完了"。</strong> 靠模型自己判断（"测试全绿了，收工"）+ 规则兜底（最大步数、最大 token 预算、超时）。开头那个 300 轮的事故，就是只靠模型判断、没设规则兜底。<strong>规则兜底至少要有三层：最大步数、token 预算、单步超时</strong>——任何一层缺了，循环都有办法跑飞。步数防打转，预算防烧钱，超时防 hanging 的工具调用。<strong>"done"的定义权，永远不能完全交给模型</strong>——因为"差不多得了"这种判断，恰恰是模型最不擅长的。</p>
+<p><strong>4. 验证闭环：循环的刹车。</strong> 跑测试、跑 lint、跑类型检查——没有验证的 Agent，就是在随机改代码。"能跑"和"跑对"是两回事，而测试是唯一不说谎的裁判。一个经验法则：<strong>Agent 的靠谱程度 = 验证闭环的强度</strong>。测试覆盖率 80% 的仓库和 20% 的仓库，交给同一个 Agent，会得到两个完全不同的结果。</p>
+<h2>为什么是 2025 年，不是 2023 年</h2>
+<p>ReAct 论文 2022 年就有了，为什么 Agent 编程到 2025 年春天才爆发？因为三条曲线同时越过了可用阈值：</p>
 <ul>
-<li><strong>模型 tool calling 可靠性</strong>：Sonnet 3.7/4 的工具调用准确率过了可用线。之前的模型调工具像扔骰子。</li>
-<li><strong>长上下文</strong>：200K 上下文让 Agent 能"记住"整个任务现场。</li>
-<li><strong>MCP</strong>：工具生态标准化，Agent 的"手"变多了（见上一篇）。</li>
+<li><strong>模型 tool calling 的可靠性</strong>。新一代模型把工具调用的准确率推过了"可用线"——参数格式不再错、该调哪个工具不再靠蒙。之前的模型调工具像扔骰子，循环转三轮就散了。</li>
+<li><strong>长上下文</strong>。200K 上下文让 Agent 能"记住"整个任务现场：报错信息、文件内容、之前的尝试，一次全塞下。没有这个，compaction 再厉害也救不了失忆的循环。</li>
+<li><strong>MCP，工具生态的标准化</strong>（见本月第一篇）。Agent 的"手"突然变多了，而且是标准化的手——接一个 Server，就多一堆能力。</li>
 </ul>
-<h2>工程上的真难点</h2>
-<ol>
-<li><strong>上下文污染</strong>：一次失败的尝试会污染后续推理。好的 Agent 要会"遗忘"——把死胡同的探索从历史中摘掉。</li>
-<li><strong>成本</strong>：一个复杂任务烧掉几十万 token 是常态。按量计费下，Agent 的 ROI 需要仔细算。</li>
-<li><strong>"70% 问题"</strong>：Agent 能搞定 70% 的任务，剩下 30% 需要人接手——而判断"这 30% 是哪部分"本身就需要专家。</li>
-<li><strong>Review 负担</strong>：AI 一分钟写 500 行，你 review 要半小时。生成速度和审查速度的剪刀差，是 Agent 落地最大的隐性成本。</li>
-</ol>
-<h2>一句话总结</h2>
-<p>AI 编程 Agent 的本质是"ReAct 循环 + 工具 + 上下文工程"。2025 年的爆发不是某个单点突破，而是模型可靠性、长上下文、工具生态三条曲线同时越过可用阈值。但别被 demo 骗了：真正的成本不在生成，在 review——而这一点，短期内不会变。</p>
-<p>##{"timestamp":1745899200,"style":".markdown-body&gt;:last-child{display:none}"}</p></div>
+<p>三条曲线，缺一条，循环都转不起来。这就是为什么"Agent 元年"喊了三年，2025 年才算数——<strong>爆发的从来不是单点突破，是多条曲线同时过线</strong>。</p>
+<h2>工程上的真难点：demo 不会告诉你的四件事</h2>
+<p><strong>第一，上下文污染。</strong> 一次失败的尝试会污染后续所有推理：模型会反复回到那个死胡同，或者被某次错误的结论带偏。好的 Agent 要会"遗忘"——把走不通的探索从历史里摘掉，只保留结论。这比"记住一切"难得多，因为"哪些该忘"本身就需要判断。</p>
+<p><strong>第二，成本。</strong> 一个复杂任务烧掉几十万 token 是常态。按量计费下，Agent 的 ROI 得仔细算：它替你省了 2 小时，但烧了 30 美元——这笔账在个人场景下划算，在每天跑上千次的 CI 场景下可能血亏。<strong>Agent 的账单是按"尝试次数"收的，不是按"成功次数"</strong>。</p>
+<p><strong>第三，"70% 问题"。</strong> Agent 能搞定 70% 的任务，剩下 30% 需要人接手——而判断"这 30% 是哪部分"本身就需要专家。最危险的不是它做不出来，而是它<strong>看起来做出来了</strong>：测试全绿，但实现里埋了个并发 bug，三个月后才爆。</p>
+<p><strong>第四，Review 的剪刀差。</strong> AI 一分钟写 500 行，你 review 要半小时。生成速度和审查速度的剪刀差，是 Agent 落地最大的隐性成本。团队引入 Agent 后，瓶颈从"写代码"变成了"看代码"——而后者更累，更需要专家。<strong>生产力的天花板，最后卡在人的审查带宽上</strong>。</p>
+<h2>循环的失败模式图鉴</h2>
+<p>跑得多了，你会发现 Agent 的死法高度雷同，就那么几种：</p>
+<ul>
+<li><strong>打转（looping）</strong>：反复读同一个文件、反复跑同一个失败的测试。病因通常是 observation 没带来新信息——循环在空转。解法：检测"连续 N 轮 observation 无变化"就强制换策略或停下。</li>
+<li><strong>目标漂移</strong>：让你"修暗色模式"，它顺手把主题系统重构了。长循环里，初始目标在上下文压缩中被稀释，模型开始自由发挥。解法：把原始目标钉在每轮 prompt 的固定位置，别让它被 compaction 冲掉。</li>
+<li><strong>过早收工</strong>：测试全绿就宣布胜利，但测试本身没覆盖改动点。<strong>循环的"done"只和验证标准一样靠谱</strong>——验证标准有洞，Agent 就会从洞里钻过去。</li>
+<li><strong>工具误用</strong>：用 <code class="notranslate">bash</code> 拼 SQL、用 <code class="notranslate">edit</code> 改二进制文件。工具描述写得越模糊，误用率越高——工具的 docstring 是 Agent 的"用户手册"，值得像写 API 文档一样认真写。</li>
+<li><strong>静默腐烂</strong>：循环跑完了，测试绿了，但代码里多了三处 TODO 和一处被注释掉的旧逻辑。Agent 没有"代码洁癖"，它只优化"让验证通过"。解法：把 lint 和"无 TODO"也写进验证闭环——<strong>你用什么验证它，它就长成什么样</strong>。</li>
+</ul>
+<h2>进阶玩法：先计划，再执行</h2>
+<p>复杂任务下，直接开循环容易跑偏。2025 年成熟的 Agent 都在用两阶段：</p>
+<pre class="notranslate"><code class="notranslate">阶段一：侦察 + 计划
+  Agent 只读不写，输出一份 plan（改哪几个文件、每步验证什么）
+  → 人 review 这份 plan（便宜，几分钟）
+
+阶段二：执行
+  Agent 按 plan 干活，每步对照验证标准
+  → 偏离 plan 超过阈值就停下来问人
+</code></pre>
+<p><strong>计划是便宜的，返工是贵的</strong>。让人在"计划"这个低成本节点介入，比在"已经改了 40 个文件"之后介入，效率高一个数量级。这是 compaction 之后，第二个最重要的 Agent 工程模式。</p>
+<h2>人机分工：让 Agent 跑广度，人来拍板</h2>
+<p>"70% 问题"决定了 Agent 时代的人机分工：<strong>Agent 负责广度，人负责关键决策</strong>。</p>
+<ul>
+<li>让 Agent 做的：搜代码、写样板、跑测试、列候选项——"把登录流程里所有调了 auth 接口的地方找出来"；</li>
+<li>让人做的：架构决策、并发和安全相关的改动、最终 merge——"这个锁的粒度能不能放大"。</li>
+</ul>
+<p>这类工具的交互设计已经在朝这个方向走：改完代码先给你看 diff，destructive 操作弹窗确认，关键节点停下来问你。<strong>好的 Agent 交互，不是"全自动"，是"自动到恰到好处，停在需要人的地方"</strong>。全自动的 Agent 听起来性感，但第一个删库的故事，会让你怀念那个弹窗。</p>
+<h2>笼子比猴子重要</h2>
+<p>回到开头那个跑了 300 轮的 Agent。后来我们给它加了三道闸：<strong>最大步数上限</strong>（超过 50 轮自动停）、<strong>每 20 轮强制总结</strong>（把备忘录写进 git note，方便人接手）、<strong>destructive 命令人工确认</strong>（<code class="notranslate">rm -rf</code>、<code class="notranslate">git push --force</code> 这类操作必须人点头）。</p>
+<p>再也没跑飞过。不是它变聪明了——模型还是那个模型。变的是笼子。</p>
+<p>这就是我想说的：AI 编程 Agent 的本质是"ReAct 循环 + 工具 + 上下文工程"，2025 年的爆发是三条曲线同时越过阈值的结果。但决定它能不能在你的团队里活下去的，不是模型有多强，而是<strong>你给循环装了多少道闸</strong>：终止条件、验证闭环、人工确认点。Demo 展示的是猴子有多聪明，生产环境考验的是笼子有多结实——而这一点，短期内不会变。</p>
+<p>##{"timestamp":1745899200}</p></div>
   <div class="article-tail"></div>
   
   <button type="button" id="cmButton" onclick="openComments()">评论</button>
