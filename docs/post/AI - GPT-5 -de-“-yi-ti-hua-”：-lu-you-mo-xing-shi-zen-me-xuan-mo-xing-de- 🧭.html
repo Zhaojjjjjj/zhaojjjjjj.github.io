@@ -6,14 +6,14 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> GPT-5 发布于 2025 年 8 月 7 日，OpenAI 称之为'一体化'系统：不再让用户选模型（GPT-4o 还是 o3？），而是内部自动路由。">
+<meta name="description" content="> GPT-5 把'选模型'这个动作删了：不再有'GPT-4o 还是 o3'的选择题，只剩一个入口，系统内部自动决定用快模型还是深度思考。">
 <meta property="og:title" content="AI - GPT-5 的“一体化”：路由模型是怎么选模型的 🧭">
-<meta property="og:description" content="> GPT-5 发布于 2025 年 8 月 7 日，OpenAI 称之为'一体化'系统：不再让用户选模型（GPT-4o 还是 o3？），而是内部自动路由。">
+<meta property="og:description" content="> GPT-5 把'选模型'这个动作删了：不再有'GPT-4o 还是 o3'的选择题，只剩一个入口，系统内部自动决定用快模型还是深度思考。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%20GPT-5%20-de-%E2%80%9C-yi-ti-hua-%E2%80%9D%EF%BC%9A-lu-you-mo-xing-shi-zen-me-xuan-mo-xing-de-%20%F0%9F%A7%AD.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
 <title>AI - GPT-5 的“一体化”：路由模型是怎么选模型的 🧭</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet">
 
 
 <style>
@@ -127,38 +127,121 @@ a{color:var(--accent-ink);text-decoration:none}
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
   <div class="article-body prose"><blockquote>
-<p>GPT-5 发布于 2025 年 8 月 7 日，OpenAI 称之为"一体化"系统：不再让用户选模型（GPT-4o 还是 o3？），而是内部自动路由。这篇拆解这个"路由"是怎么做的，以及它为什么是必然趋势。</p>
+<p>GPT-5 把"选模型"这个动作删了：不再有"GPT-4o 还是 o3"的选择题，只剩一个入口，系统内部自动决定用快模型还是深度思考。这篇拆解这个"路由器"到底是怎么做的，以及为什么"一个入口，智能分发"会是所有 AI 应用的终点形态。</p>
 </blockquote>
-<h2>用户侧的变化</h2>
-<p>之前：</p>
-<pre class="notranslate"><code class="notranslate">写代码 → 选 o3（慢但强）
-闲聊 → 选 4o（快但弱）
-选错了 → 要么等半天，要么答案拉胯
+<p>GPT-5 发布那周，所有人都在讨论跑分涨了多少。但跑分是会过时的——真正留下来的是一个看似不起眼的产品细节：<strong>模型选择器被删了</strong>。</p>
+<p>这不是 UI 改版。这是 OpenAI 第一次公开承认：<strong>"选模型"这个负担，不该由用户来扛</strong>。而扛下它的东西，叫路由器（router）。</p>
+<h2>删掉选择器，为什么是大事</h2>
+<p>先看用户侧的变化：</p>
+<pre class="notranslate"><code class="notranslate">之前：
+  写代码 → 纠结选 o3（慢但强）
+  闲聊   → 选 4o（快但弱）
+  选错了 → 要么等半天，要么答案拉胯
+
+之后：
+  只有一个输入框，系统自己决定"快答"还是"深想"
 </code></pre>
-<p>GPT-5 之后：只有一个入口，系统自己决定用"快模型"还是"深度思考"。用户不用再做选择题。</p>
-<h2>路由器的三种实现</h2>
-<ol>
-<li><strong>规则路由</strong>（最糙）：关键词匹配，"证明"→推理模型，"翻译"→快模型。2024 年的过渡方案。</li>
-<li><strong>小模型分类</strong>（主流）：用一个轻量分类器判断查询复杂度/类型，再分发。延迟增加 50ms，但准确率高。</li>
-<li><strong>模型内路由</strong>（GPT-5 的方向）：单个大模型内部，early exit / 自适应计算——简单问题算几层就输出，难题全量计算。这是"路由"和"混合推理"的合流。</li>
-</ol>
-<h2>工程难点</h2>
+<p>这解决的是一个经典的产品困境：<strong>选择悖论</strong>。模型越多（旗舰、轻量、推理、多模态……），用户选对的概率越低，选错的挫败感越强。把 5 个模型摆在用户面前，本质上是把内部的工程复杂度转嫁给了用户。</p>
+<p>更深一层，这是商业模式的位移：<strong>从"卖模型"到"卖能力"</strong>。用户买的不再是"某个模型的调用次数"，而是"问题被解决"。中间那层"哪个模型来解"，成了供应商的内部事务——就像你买云服务器，不关心它被调度到了哪台物理机。</p>
+<h2>路由器是怎么做的：三种实现</h2>
+<h3>1. 规则路由：最糙，但曾经够用</h3>
+<p>关键词/正则匹配："证明"→推理模型，"翻译一下"→快模型。</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">if</span> <span class="pl-en">any</span>(<span class="pl-s1">kw</span> <span class="pl-c1">in</span> <span class="pl-s1">query</span> <span class="pl-k">for</span> <span class="pl-s1">kw</span> <span class="pl-c1">in</span> [<span class="pl-s">"证明"</span>, <span class="pl-s">"推导"</span>, <span class="pl-s">"prove"</span>]):
+    <span class="pl-en">route_to</span>(<span class="pl-s">"reasoning-model"</span>)
+<span class="pl-k">elif</span> <span class="pl-en">len</span>(<span class="pl-s1">query</span>) <span class="pl-c1">&lt;</span> <span class="pl-c1">20</span>:
+    <span class="pl-en">route_to</span>(<span class="pl-s">"fast-model"</span>)</pre></div>
+<p>优点是零延迟、完全可解释；缺点是脆弱——"证明我没拿你东西"也会被送去深度思考。这是前两年的过渡方案，现在只适合做兜底。</p>
+<h3>2. 小模型分类器：当前主流</h3>
+<p>用一个轻量模型先判断查询的<strong>类型</strong>和<strong>难度</strong>，再分发给对应的大模型：</p>
+<pre class="notranslate"><code class="notranslate">用户问题 → 分类器（约 50ms，可忽略）
+  ├─ 闲聊/简单问答 → 快模型（便宜一个数量级，快数倍）
+  ├─ 中等难度       → 标准模型
+  └─ 数学/代码/复杂推理 → 推理模型（放开思考预算）
+</code></pre>
+<p>这里有个精妙的自举：<strong>分类器的训练数据，是用最强模型标注出来的</strong>。用旗舰模型给海量 query 打"难度分"，再蒸馏出一个小分类器——大力出奇迹，再用小力省钱。</p>
+<p>但分类器路由有个天然上限：<strong>它只能做"请求级"路由</strong>。一个问题进去、选定模型，就一条道走到黑。如果对话中途难度突变（"顺便帮我证明一下这个结论"），分类器无能为力。</p>
+<h3>3. 模型内路由：GPT-5 的方向</h3>
+<p>单个大模型内部，按需分配计算量——简单问题算几层就 early exit，难题全量计算。这已经不是"选模型"，而是**"选算力"**：</p>
 <ul>
-<li><strong>误判的代价不对称</strong>：把难题判成简单题（答案错）比把简单题判成难题（多花点钱）严重得多。路由器的调参永远偏向"宁可多想"。</li>
-<li><strong>冷启动</strong>：新用户没有历史，第一次路由靠纯文本判断，准确率最低。</li>
-<li><strong>可解释性</strong>：用户问"为什么这次这么慢"，你得能回答。OpenAI 在 API 里暴露了 <code class="notranslate">reasoning_effort</code> 的实际值，算是一种交代。</li>
+<li><strong>按 token 分配</strong>：每个 token 的生成难度不同，简单的少算、难的多算（自适应计算）；</li>
+<li><strong>MoE 的亲戚</strong>：MoE 是按 token 选专家，模型内路由是按难度选"思考深度"，思想同源；</li>
+<li><strong>与混合推理合流</strong>："快思考/慢思考"不再是两个模型，而是一个模型的两种工作模式。</li>
 </ul>
-<h2>为什么这是必然</h2>
-<p>模型越来越多（旗舰/轻量/推理/多模态），用户不可能每次都选对。<strong>"一个入口，智能分发"是所有成熟平台的终点</strong>：CDN 按线路路由、K8s 按负载调度，AI 也一样。</p>
-<p>对开发者的影响：</p>
+<p>这是"路由"概念的终极形态：<strong>路由层从系统架构，下沉到了模型架构</strong>。以后可能没有"路由器"这个独立组件了，因为模型自己就是路由器。</p>
+<p>不过短期内，2 和 3 会长期共存：分类器管"选哪个模型"，模型内路由管"每个模型内部怎么省算力"。</p>
+<h2>四个工程难点，一个比一个贵</h2>
+<h3>难点一：误判的代价不对称</h3>
+<p>这是路由调参的第一性原理：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>误判方向</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>难题判成简单题（under-thinking）</td>
+<td><strong>答案错</strong>——用户直接流失</td>
+</tr>
+<tr>
+<td>简单题判成难题（over-thinking）</td>
+<td>多花点钱、多等几秒——用户基本无感</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p><strong>把难题判错的代价，比把简单题判错高一个数量级。</strong> 所以路由器的阈值永远偏向"宁可多想"：宁可让 30% 的简单问题走推理模型，也不让 1% 的难题被敷衍。这也解释了为什么一体化系统早期总被吐槽"变慢了"——保守策略下，大量本可以快答的问题被送去深想了。</p>
+<p>工程上的解法是<strong>分级阈值 + 事后升级</strong>：先按宽松阈值路由，如果快模型的回答置信度低（self-evaluation），再升级到强模型重做。用一次廉价尝试，换一份保险。</p>
+<h3>难点二：冷启动</h3>
+<p>新用户没有历史，第一次路由只能靠纯文本判断——准确率最低的时候，恰恰是用户形成第一印象的时候。</p>
+<p>务实的做法：<strong>新用户默认保守</strong>（偏向强模型），同时用前 10 次交互快速校准分类器。冷启动不是技术问题，是体验问题：别在用户最在乎的时候掉链子。</p>
+<h3>难点三：可解释性</h3>
+<p>用户问"为什么这次这么慢"，客服得能回答；企业客户做审计，得知道"我的请求到底走了哪个模型、花了多少钱"。</p>
+<p>OpenAI 在 API 里暴露了实际使用的 <code class="notranslate">reasoning_effort</code>，算是一种交代。但这只是开始——成熟的路由系统需要完整的<strong>路由日志</strong>：每个请求走了哪条分支、分类器打了多少分、为什么没走另一条。没有这个，路由就是黑盒，黑盒进不了企业。</p>
+<h3>难点四：评估归因模糊了</h3>
+<p>"某一体化模型在 benchmark 得分 90"——<strong>是哪个子模型得的？</strong> 一体化让评测的归因变得模糊，甚至留出了作弊空间：理论上，供应商可以把"疑似评测题"全部路由到最强的内部模型，刷出漂亮的数字，而日常用户走的却是便宜分支。</p>
+<p>对策是<strong>按难度分层评测</strong>：别只看总分，看"简单题走快模型的答对率"和"难题走强模型的答对率"两条曲线。做 AI 选型的团队，评测报告里必须有这一页。</p>
+<h3>难点五：路由本身的开销</h3>
+<p>路由器不是免费的。分类器一次推理 50-200ms，对"闲聊"这种 300ms 就能答完的请求，路由开销占比超过 30%——<strong>为了省钱花的钱，不能超过省下的钱</strong>。</p>
+<p>工程上有三层优化：</p>
 <ol>
-<li><strong>别再让用户选模型</strong>：你的 AI 产品也该做路由——意图分类 + 分发，好过把 5 个模型摆在用户面前。</li>
-<li><strong>成本优化空间</strong>：80% 的查询用便宜模型，只有 20% 走旗舰，账单直接砍半。</li>
-<li><strong>评估变难了</strong>："GPT-5 得分 90"——是哪个子模型得的？一体化让 benchmark 的归因变得模糊。</li>
+<li><strong>分类器和首 token 并行</strong>：不等分类结果，先用默认模型开始生成，分类结果出来后再决定是否切换（投机式路由）；</li>
+<li><strong>缓存路由决策</strong>：同一用户的相似问题，路由结果大概率相同——embedding 相似度超过阈值直接复用上次决策；</li>
+<li><strong>级联路由</strong>：先用超轻量规则做粗分（明显闲聊直接走快模型），只有模糊地带才上分类器。<strong>把 80% 的请求挡在第一层</strong>，分类器只处理 20% 的疑难杂症。</li>
 </ol>
-<h2>一句话总结</h2>
-<p>GPT-5 的"一体化"不是模型变强了，是<strong>产品形态变了</strong>：从"卖模型"到"卖能力"。路由层会成为 AI 应用的标配基础设施——就像没人直接买服务器了，都买云。</p>
-<p>##{"timestamp":1754625600}</p></div>
+<p>还有一个隐形开销：<strong>路由器的维护成本</strong>。新模型上线，分类器的"难度标尺"要重标；用户行为漂移，分类器要重训。路由器本身是一个需要持续运营的 ML 系统，不是写一次就完事的 if-else。很多团队第一版路由上线时效果惊艳，半年后悄悄腐化——就是因为没人维护分类器。</p>
+<h2>给开发者的五条建议</h2>
+<p><strong>1. 别再让用户选模型。</strong> 你的 AI 产品也该做路由——意图分类 + 按难度分发，好过把 5 个模型摆在用户面前让用户做阅读理解。路由最好的 UI 形态，就是"没有 UI"。</p>
+<p>一个最小可用的路由架构长这样：</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">handle</span>(<span class="pl-s1">query</span>, <span class="pl-s1">session</span>):
+    <span class="pl-c"># 1. 会话级 sticky：同一会话优先保持上次路由，避免人格跳变</span>
+    <span class="pl-k">if</span> <span class="pl-s1">session</span>.<span class="pl-c1">last_route</span> <span class="pl-c1">and</span> <span class="pl-c1">not</span> <span class="pl-en">difficulty_shifted</span>(<span class="pl-s1">query</span>, <span class="pl-s1">session</span>):
+        <span class="pl-k">return</span> <span class="pl-en">dispatch</span>(<span class="pl-s1">session</span>.<span class="pl-c1">last_route</span>, <span class="pl-s1">query</span>)
+    <span class="pl-c"># 2. 级联分类：规则粗分 → 小模型细分</span>
+    <span class="pl-s1">route</span> <span class="pl-c1">=</span> <span class="pl-en">rule_filter</span>(<span class="pl-s1">query</span>) <span class="pl-c1">or</span> <span class="pl-s1">classifier</span>.<span class="pl-c1">predict</span>(<span class="pl-s1">query</span>)
+    <span class="pl-c"># 3. 置信度兜底：分不清就升级，宁可多想</span>
+    <span class="pl-k">if</span> <span class="pl-s1">route</span>.<span class="pl-c1">confidence</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0.7</span>:
+        <span class="pl-s1">route</span> <span class="pl-c1">=</span> <span class="pl-en">escalate</span>(<span class="pl-s1">route</span>)
+    <span class="pl-en">log_route</span>(<span class="pl-s1">query</span>, <span class="pl-s1">route</span>)  <span class="pl-c"># 4. 路由日志：可审计是底线</span>
+    <span class="pl-k">return</span> <span class="pl-en">dispatch</span>(<span class="pl-s1">route</span>, <span class="pl-s1">query</span>)
+
+<span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-c1">1.</span> <span class="pl-s1">别再让用户选模型</span>。<span class="pl-c1">**</span> <span class="pl-s1">你的</span> <span class="pl-c1">AI</span> <span class="pl-s1">产品也该做路由</span>——<span class="pl-s1">意图分类</span> <span class="pl-c1">+</span> <span class="pl-s1">按难度分发</span>，<span class="pl-s1">好过把</span> <span class="pl-c1">5</span> <span class="pl-s1">个模型摆在用户面前让用户做阅读理解</span>。<span class="pl-s1">路由最好的</span> <span class="pl-c1">UI</span> <span class="pl-s1">形态</span>，<span class="pl-s1">就是</span><span class="pl-s">"没有 UI"</span>。
+
+<span class="pl-c1">**</span><span class="pl-c1">2.</span> <span class="pl-s1">成本优化空间是真实的</span>。<span class="pl-c1">**</span> <span class="pl-s1">实测中</span>，<span class="pl-s1">约</span> <span class="pl-c1">70</span><span class="pl-c1">-</span><span class="pl-c1">80</span><span class="pl-c1">%</span> <span class="pl-s1">的查询用便宜模型就能处理好</span>，<span class="pl-s1">只有</span> <span class="pl-c1">20</span><span class="pl-c1">-</span><span class="pl-c1">30</span><span class="pl-c1">%</span> <span class="pl-s1">需要旗舰模型</span>。<span class="pl-s1">账单直接砍半</span>，<span class="pl-s1">比任何</span><span class="pl-s">"换便宜模型"</span><span class="pl-s1">的谈判都管用</span>。<span class="pl-s1">思考模型的</span><span class="pl-s">"思考税"</span><span class="pl-s1">之前专门算过一笔账</span>，<span class="pl-s1">路由正是降本的第一杠杆</span>。
+
+<span class="pl-c1">**</span><span class="pl-c1">3.</span> <span class="pl-s1">先解决多轮一致性</span>。<span class="pl-c1">**</span> <span class="pl-s1">同一会话里切模型</span>，<span class="pl-s1">会导致风格跳变</span>、<span class="pl-s1">上下文理解断裂</span>。<span class="pl-s1">工程上用</span> <span class="pl-c1">**</span><span class="pl-s1">sticky</span> <span class="pl-s1">routing</span><span class="pl-c1">**</span>：<span class="pl-s1">会话一旦路由到某模型</span>，<span class="pl-s1">后续轮次优先保持</span>，<span class="pl-s1">难度变化时再整体升级</span>。<span class="pl-s1">别让用户感觉</span><span class="pl-s">"突然换了个人格"</span>。
+
+<span class="pl-c1">**</span><span class="pl-c1">4.</span> <span class="pl-s1">路由是权力</span>，<span class="pl-s1">要有制衡</span>。<span class="pl-c1">**</span> <span class="pl-s1">暗黑模式预警</span>：<span class="pl-s1">供应商完全可以把免费用户悄悄路由到便宜模型</span>、<span class="pl-s1">把高价值问题优先送强模型</span>——<span class="pl-s1">用户无从察觉</span>。<span class="pl-s1">作为开发者</span>，<span class="pl-s1">给自己的路由系统加三条红线</span>：<span class="pl-s1">路由日志可审计</span>、<span class="pl-s1">用户可手动指定模型</span>（<span class="pl-s1">高级选项</span>）、<span class="pl-s1">定期公布路由分布</span>。<span class="pl-c1">**</span><span class="pl-s1">路由即权力</span>，<span class="pl-s1">权力需要被看见</span>。<span class="pl-c1">**</span>
+
+<span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-c1">5.</span> <span class="pl-s1">给路由建观测</span>。<span class="pl-c1">**</span> <span class="pl-s1">四个指标每周看一次</span>：<span class="pl-s1">路由分布</span>（<span class="pl-s1">各分支占比是否符合预期的</span> <span class="pl-c1">80</span><span class="pl-c1">/</span><span class="pl-c1">20</span>）、<span class="pl-s1">升级率</span>（<span class="pl-s1">快模型</span>→<span class="pl-s1">强模型的比例</span>，<span class="pl-s1">超过</span> <span class="pl-c1">15</span><span class="pl-c1">%</span> <span class="pl-s1">说明分类器太激进</span>）、<span class="pl-v">P99</span> <span class="pl-s1">延迟分层</span>（<span class="pl-s1">路由开销有没有吃掉省下的时间</span>）、<span class="pl-s1">人工抽样误判率</span>。<span class="pl-c1">**</span><span class="pl-s1">没有观测的路由</span>，<span class="pl-s1">半年后一定腐化</span>。<span class="pl-c1">**</span>
+
+<span class="pl-c">## 一体化之后，拼的是路由</span>
+
+<span class="pl-c1">GPT</span><span class="pl-c1">-</span><span class="pl-c1">5</span> <span class="pl-s1">的</span><span class="pl-s">"一体化"</span><span class="pl-s1">会被记住</span>，<span class="pl-s1">不是因为它更强</span>，<span class="pl-s1">而是因为它第一个把牌摊在了桌上</span>：<span class="pl-c1">**</span><span class="pl-s1">用户侧只剩一个输入框</span>，<span class="pl-s1">复杂度全部沉到路由层</span><span class="pl-c1">**</span>。<span class="pl-c1">CDN</span> <span class="pl-s1">按线路路由请求</span>，<span class="pl-v">K8s</span> <span class="pl-s1">按负载调度容器</span>，<span class="pl-s1">云按需分配算力</span>——<span class="pl-c1">AI</span> <span class="pl-s1">按难度分配智能</span>，<span class="pl-s1">是同一条路的下一站</span>。
+
+<span class="pl-s1">模型会继续变多</span>、<span class="pl-s1">变强</span>、<span class="pl-s1">变便宜</span>，<span class="pl-s1">但</span><span class="pl-s">"选模型"</span><span class="pl-s1">这个动作不会回来了</span>。<span class="pl-s1">路由层正在成为</span> <span class="pl-c1">AI</span> <span class="pl-s1">应用的水电煤</span>：<span class="pl-s1">看不见</span>，<span class="pl-s1">但缺了它</span>，<span class="pl-s1">一切都转不动</span>。<span class="pl-s1">先把它吃透的团队</span>，<span class="pl-s1">会先拿到成本和体验的双重红利</span>——<span class="pl-s1">这不是预测</span>，<span class="pl-s1">是已经发生的账单</span>。
+
+<span class="pl-c">##{"timestamp":1754625600}</span></pre></div></div>
   <div class="article-tail"></div>
   
   <button type="button" id="cmButton" onclick="openComments()">评论</button>
