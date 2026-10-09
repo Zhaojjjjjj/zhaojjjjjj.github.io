@@ -6,9 +6,9 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> 模型价格战打了一年，token 单价降了 90%。">
+<meta name="description" content="某团队去年把主力模型换成便宜 70% 的新模型，三个月后财务找到他们：AI 账单涨了 40%。">
 <meta property="og:title" content="AI - 推理成本的账：便宜 token 为什么反而更贵 💸">
-<meta property="og:description" content="> 模型价格战打了一年，token 单价降了 90%。">
+<meta property="og:description" content="某团队去年把主力模型换成便宜 70% 的新模型，三个月后财务找到他们：AI 账单涨了 40%。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%20-tui-li-cheng-ben-de-zhang-%EF%BC%9A-bian-yi-%20token%20-wei-shen-me-fan-er-geng-gui-%20%F0%9F%92%B8.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
@@ -126,47 +126,102 @@ a{color:var(--accent-ink);text-decoration:none}
     <h1 class="article-title">AI - 推理成本的账：便宜 token 为什么反而更贵 💸</h1>
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
-  <div class="article-body prose"><blockquote>
-<p>模型价格战打了一年，token 单价降了 90%。但很多团队的账单反而涨了——因为便宜的 token 诱使你调用更多、想得更久。这篇算算推理成本的真实构成。</p>
-</blockquote>
-<h2>单价降了，用量涨了</h2>
-<p>这是 AI 版的杰文斯悖论：<strong>效率提升不会减少消耗，只会扩大使用</strong>。</p>
-<pre class="notranslate"><code class="notranslate">单价降 90% × 调用量涨 20 倍 = 总账单涨一倍
+  <div class="article-body prose"><p>某团队去年把主力模型换成便宜 70% 的新模型，三个月后财务找到他们：AI 账单涨了 40%。</p>
+<p>这不是个例。模型价格战打了一年，token 单价降了 90%，但很多团队的总账单不降反升。因为<strong>便宜的 token 诱使你调用更多、想得更久</strong>——这是 AI 版的杰文斯悖论：效率提升不会减少消耗，只会扩大使用。</p>
+<h2>先看清账单的构成</h2>
+<pre class="notranslate"><code class="notranslate">月账单 = Σ(每次调用 [输入 token × 输入单价 + 输出 token × 输出单价])
 </code></pre>
-<p>只比单价，是 2024 年的思维。2026 年要比的，是<strong>完成一个任务的期望成本</strong>。</p>
-<h2>三个隐形成本</h2>
-<h3>1. 思考税（reasoning tax）</h3>
-<p>推理模型为了答一道题，可能在内部"想" 10 倍长度的 thinking token，而用户只看到 1 倍的答案。在按输出 token 计费的定价下，<strong>thinking token 才是账单的大头</strong>。</p>
-<pre class="notranslate"><code class="notranslate">用户看到：200 token 的答案
-实际消耗：2000 token 的思考 + 200 token 的答案
-账单：按 2200 个输出 token 算
+<p>输出单价通常是输入的 2-4 倍。而"输出"里的大头，往往不是答案，而是<strong>思考过程</strong>。</p>
+<pre class="notranslate"><code class="notranslate">用户看到的答案：           200 token
+模型内部的思考：         2,000 token
+账单按输出计费：         2,200 token × 输出单价
 </code></pre>
-<p><strong>对策</strong>：按任务难度路由——简单任务用非思考模型，难题才上推理模型。（呼应之前写的混合推理架构）</p>
-<h3>2. 重试税</h3>
-<p>弱模型单价便宜，但一次成功率 70%；强模型贵 3 倍，一次成功率 95%。</p>
-<pre class="notranslate"><code class="notranslate">弱模型期望成本 = 单价 × (1/0.7) ≈ 单价 × 1.43  （还要算重试的延迟）
-强模型期望成本 = 单价×3 × (1/0.95) ≈ 单价 × 3.16
+<p>只比单价，是 2024 年的思维。2026 年要比的，是<strong>完成一个任务的期望成本</strong>。下面三个隐形成本，每个都可能比单价差异大一个数量级。</p>
+<h2>隐形成本一：思考税</h2>
+<p>推理模型有个特点：<strong>想得越久，答得越好，但账单越贵</strong>。不同任务的"思考/答案比"天差地别：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>任务类型</th>
+<th>思考 token</th>
+<th>答案 token</th>
+<th>倍数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单问答、分类</td>
+<td>~100</td>
+<td>~100</td>
+<td>1x</td>
+</tr>
+<tr>
+<td>代码生成</td>
+<td>~2,000</td>
+<td>~500</td>
+<td>4x</td>
+</tr>
+<tr>
+<td>数学证明、复杂规划</td>
+<td>~10,000</td>
+<td>~800</td>
+<td>12x</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>12 倍意味着：你在为 12 份"草稿纸"付费，只为了 1 份"答卷"。</p>
+<p><strong>对策是按难度路由</strong>，而不是一刀切：</p>
+<pre class="notranslate"><code class="notranslate">用户问题 → 难度分类器（小模型，几乎免费）
+  ├─ 简单 → 非思考模型（快 5 倍，便宜 10 倍）
+  ├─ 中等 → 思考模型，限制思考预算
+  └─ 困难 → 最强推理模型，放开思考
 </code></pre>
-<p>看着弱模型赢？别急——<strong>重试还有延迟成本和用户体验成本</strong>。对实时性要求高的场景，一次失败的用户流失，远比 token 贵。</p>
-<p><strong>对策</strong>：给每个任务设"一次成功率"指标，和单价一起看。</p>
-<h3>3. 上下文税</h3>
-<p>长上下文的 input token 看似便宜，但 attention 计算是平方级增长：</p>
+<p>分类器本身的成本忽略不计，但能把 70% 的简单请求从"思考税"里摘出来。这正是混合推理架构在工程上的落地。</p>
+<h2>隐形成本二：重试税</h2>
+<p>弱模型单价便宜，但一次成功率 70%；强模型贵 3 倍，一次成功率 95%。算期望成本：</p>
+<pre class="notranslate"><code class="notranslate">弱模型期望成本 = 1.0 × (1/0.70) ≈ 1.43   （平均要调 1.43 次）
+强模型期望成本 = 3.0 × (1/0.95) ≈ 3.16
+</code></pre>
+<p>看着弱模型赢了？别急着下结论。重试还有两笔账：</p>
+<p><strong>延迟成本</strong>：每次重试都是一次完整的往返。在实时交互场景（客服、结账助手），多一次重试就是多 3-5 秒等待。用户流失的代价，远比 token 贵。</p>
+<p><strong>级联成本</strong>：在 Agent 链路里，一步失败会导致整个链条重跑。一个 5 步的 Agent，每步成功率 90%，整体成功率只有 59%。这时候<strong>每一步都值得用强模型</strong>——短板效应下，最弱的那步决定了总成本。</p>
+<p><strong>对策</strong>：给每个任务设"一次成功率"指标，和单价一起看。核心链路用强模型保成功率，边缘任务用弱模型省单价。</p>
+<h2>隐形成本三：上下文税</h2>
+<p>长上下文的 input token 看似便宜，但有两个隐藏代价：</p>
+<p><strong>计算代价</strong>：attention 是平方级复杂度。128K 上下文的首 token 延迟，可能是 4K 上下文的 10 倍以上。你为"以防万一"塞进去的文档，每次调用都在交税——交的不是 token，是延迟。</p>
+<p><strong>注意力稀释</strong>：上下文越长，模型越容易忽略关键信息（大海捞针问题）。你塞了 100 页文档，模型可能恰恰没看到第 37 页的那行关键配置。</p>
+<p><strong>对策</strong>：</p>
 <ul>
-<li>128K 上下文：首 token 延迟可能是 4K 上下文的 10 倍+</li>
-<li>你塞进去的"以防万一"的文档，每次都在交税</li>
+<li>该 RAG 的别硬塞：检索出 top_k 再拼，比全量塞便宜又准；</li>
+<li>prompt caching：重复的 system prompt 和文档只算一次钱（之前专门写过一篇）；</li>
+<li>定期做"上下文审计"：看看 prompt 里有多少 token 是从来没被模型"注意"过的。</li>
 </ul>
-<p><strong>对策</strong>：prompt caching（之前专门写过一篇）、上下文压缩、该 RAG 的别硬塞。</p>
-<h2>算账公式</h2>
-<pre class="notranslate"><code class="notranslate">期望成本 = 单价 × (1 + 思考倍数) × (1 / 一次成功率) × (1 - 缓存命中率 × 缓存折扣)
+<h2>一个完整的算例</h2>
+<p>客服问答场景，日均 1 万次会话，两种方案：</p>
+<pre class="notranslate"><code class="notranslate">方案 A：单一强模型
+  单价：输入 ¥0.01/K，输出 ¥0.04/K
+  平均输入 2K（含 1.5K 缓存），平均输出 0.5K（含思考）
+  单次成本 ≈ 0.5×0.01 + 1.5×0.01×0.1 + 0.5×0.04 ≈ ¥0.0265
+  一次成功率 95% → 期望成本 ¥0.0279/次
+  月成本：10,000 × 30 × 0.0279 ≈ ¥8,370
+
+方案 B：路由 + 缓存 + 弱模型打底
+  70% 简单问题走弱模型（¥0.002/K），30% 走强模型
+  单次期望成本 ≈ ¥0.012
+  一次成功率 92% → 期望成本 ¥0.013/次
+  月成本 ≈ ¥3,900
 </code></pre>
-<p>不用精确算，记住三个杠杆就行：</p>
+<p><strong>差了一倍多</strong>。而单价差异只有 3-5 倍——真正的差距来自路由和缓存的乘数效应。</p>
+<h2>降本检查清单</h2>
+<p>下次review AI 账单时，按这个顺序查：</p>
 <ol>
-<li><strong>路由</strong>：按难度选模型，别拿牛刀杀鸡，也别拿杀鸡刀砍牛；</li>
-<li><strong>缓存</strong>：重复的 system prompt 和文档，该缓存缓存；</li>
-<li><strong>一次做对</strong>：在关键链路上用强模型，比"便宜模型+重试"更省。</li>
+<li><strong>路由</strong>：有没有按难度分流？多少简单请求在烧思考模型的钱？</li>
+<li><strong>缓存</strong>：system prompt 和静态文档的缓存命中率是多少？低于 80% 就是漏水；</li>
+<li><strong>重试率</strong>：整体重试率超过 10%？先提成功率，再谈单价；</li>
+<li><strong>上下文</strong>：平均输入 token 是不是在悄悄变长？设个告警线；</li>
+<li><strong>影子测试</strong>：新模型上线前，先切 5% 流量对比"任务完成成本"，别只看单价。</li>
 </ol>
-<h2>一句话总结</h2>
-<p>推理成本公式：<strong>期望成本 = 单价 × 思考倍数 ÷ 一次成功率</strong>。降本三板斧：<strong>按难度路由、缓存复用、减少重试</strong>。记住：<strong>最贵的不是 token，是失败的那一次调用</strong>。</p>
+<p>最后说个反直觉的结论：<strong>2026 年最省钱的策略，往往不是用最便宜的模型，而是让最贵的模型少干活</strong>——把 70% 的请求挡在它前面，剩下的 30% 让它一次做对。省钱的本质是减少浪费，不是压低单价。</p>
 <p>##{"timestamp":1776225600}</p></div>
   <div class="article-tail"></div>
   
