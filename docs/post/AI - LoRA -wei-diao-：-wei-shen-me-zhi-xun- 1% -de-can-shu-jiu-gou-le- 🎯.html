@@ -6,9 +6,9 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> LoRA（Low-Rank Adaptation）是 2021 年的论文，却在 2025 年成了大模型落地的标配：微调一个 70B 模型，只需要改不到 1% 的参数。">
+<meta name="description" content="去年，某创业团队的算法同学跟我倒过苦水：'我们想在 32B 模型上微调自己的客服数据，云厂商报价单上的 A100 小时数，让我把方案 PPT 又默默关掉了。">
 <meta property="og:title" content="AI - LoRA 微调：为什么只训 1% 的参数就够了 🎯">
-<meta property="og:description" content="> LoRA（Low-Rank Adaptation）是 2021 年的论文，却在 2025 年成了大模型落地的标配：微调一个 70B 模型，只需要改不到 1% 的参数。">
+<meta property="og:description" content="去年，某创业团队的算法同学跟我倒过苦水：'我们想在 32B 模型上微调自己的客服数据，云厂商报价单上的 A100 小时数，让我把方案 PPT 又默默关掉了。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%20LoRA%20-wei-diao-%EF%BC%9A-wei-shen-me-zhi-xun-%201%25%20-de-can-shu-jiu-gou-le-%20%F0%9F%8E%AF.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
@@ -126,48 +126,120 @@ a{color:var(--accent-ink);text-decoration:none}
     <h1 class="article-title">AI - LoRA 微调：为什么只训 1% 的参数就够了 🎯</h1>
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
-  <div class="article-body prose"><blockquote>
-<p>LoRA（Low-Rank Adaptation）是 2021 年的论文，却在 2025 年成了大模型落地的标配：微调一个 70B 模型，只需要改不到 1% 的参数。这篇讲透它为什么work，以及实践中的坑。</p>
-</blockquote>
-<h2>核心思想：低秩假设</h2>
-<p>全量微调要更新所有参数：</p>
-<pre class="notranslate"><code class="notranslate">W' = W + ΔW    （ΔW 和 W 一样大，70B 模型就要存 70B 的梯度）
+  <div class="article-body prose"><p>去年，某创业团队的算法同学跟我倒过苦水："我们想在 32B 模型上微调自己的客服数据，云厂商报价单上的 A100 小时数，让我把方案 PPT 又默默关掉了。"</p>
+<p>三个月后，他用一张 4090 把这事干成了。秘诀不是"找到了更便宜的卡"，而是换了一个问题：<strong>微调，真的需要动全部参数吗？</strong></p>
+<h2>先算一笔账：全量微调有多贵</h2>
+<p>全量微调（full fine-tuning）要更新所有参数。以 32B 模型为例，在 Adam 优化器下：</p>
+<pre class="notranslate"><code class="notranslate">参数本身（FP16）：         32B × 2 字节 = 64GB
+梯度：                    64GB（和参数一样大）
+Adam 优化器状态（FP32）：  32B × (4+4) 字节 = 256GB
+──────────────────────────────────
+总计：约 384GB 显存
 </code></pre>
-<p>LoRA 的洞察：<strong>ΔW 的秩很低</strong>。也就是说，微调带来的"变化"，可以用两个小矩阵的乘积近似：</p>
+<p>384GB——8 张 A100（80GB）刚好够，还没算激活值。这就是"千卡俱乐部"的由来：<strong>全量微调的成本，90% 花在了"记住怎么更新"（优化器状态），而不是"更新本身"</strong>。</p>
+<p>LoRA 的洞察就从这里开始：既然微调只是对预训练权重做一次"小调整"，那这次调整本身，是不是可以用很少的参数来表示？</p>
+<h2>核心思想：ΔW 的秩很低</h2>
+<p>全量微调的更新可以写成：</p>
+<pre class="notranslate"><code class="notranslate">W' = W + ΔW    （ΔW 和 W 一样大）
+</code></pre>
+<p>LoRA 说：<strong>ΔW 的秩很低</strong>，可以用两个小矩阵的乘积来近似：</p>
 <pre class="notranslate"><code class="notranslate">ΔW ≈ B × A
 W' = W + B·A
 
 其中 W: d×k，B: d×r，A: r×k，r &lt;&lt; d,k（r 通常取 8/16/64）
 </code></pre>
-<p>70B 模型，d=8192，r=16：</p>
-<pre class="notranslate"><code class="notranslate">全量：8192 × 8192 = 67M 参数/层
-LoRA：8192×16×2 = 262K 参数/层 → 省了 256 倍
+<p>冻结 W，只训 B 和 A。算一下 70B 模型（d=8192，r=16）单层的账：</p>
+<pre class="notranslate"><code class="notranslate">全量：8192 × 8192 = 6700 万参数/层
+LoRA：8192×16×2 = 26 万参数/层 → 省了 256 倍
 </code></pre>
-<h2>为什么低秩假设成立</h2>
-<p>直觉：预训练已经让 W 接近最优，微调只是在"微调"——<strong>变化量本身就应该很小</strong>。数学上，Aghajanyan 2020 年证明了：大模型的"内在维度"（intrinsic dimension）很低，几百维就够了。</p>
-<p>实践验证：r=8 和 r=64 的效果差距很小，说明瓶颈不在秩，而在数据。</p>
-<h2>推理时零开销</h2>
-<p>LoRA 最优雅的一点：<strong>推理时可以合并</strong>。</p>
-<pre class="notranslate"><code class="notranslate">W' = W + B·A   （提前算好，存成新权重）
+<p>整模型实际训练的参数量不到 1%。<strong>优化器状态也只按这 1% 存</strong>——384GB 的账单，直接砍到几十 GB。开篇那张 4090，就是这么进场的。</p>
+<h2>为什么"低秩假设"成立</h2>
+<p>这不是拍脑袋，有两层理由：</p>
+<p><strong>第一层：微调的"变化量"本身就应该小。</strong> 预训练已经让 W 接近一个很好的位置，微调只是在上面做"小偏移"——学一个客服话术、一种代码风格，不需要把整个权重空间重排一遍。一个"小偏移"，自然可以用低秩矩阵描述。<strong>变化小，是微调的定义，不是假设。</strong></p>
+<p><strong>第二层：大模型的内在维度很低。</strong> Aghajanyan 在 2020 年就证明过：大模型的"内在维度"（intrinsic dimension）只有几百——真正决定模型行为的自由度，远小于参数量。LoRA 的 r=8/16/64，恰好落在这个量级里。它不是"偷工减料"，是"按需分配"。</p>
+<p>实践也印证了这一点：<strong>r=8 和 r=64 的效果差距很小</strong>。如果瓶颈在"秩不够"，r 翻 8 倍应该有质变——没有。这说明瓶颈不在秩，在数据。r 只是个"够用就好"的旋钮，不是越大越强。很多人一上来 r=64，本质上是在用参数量掩盖数据的问题。</p>
+<p>多说一句：低秩假设和"彩票假说"（lottery ticket hypothesis）是亲戚。两者都在说：大网络里真正起作用的，是一个小子结构。LoRA 是"训练时只动这个小子结构"，彩票假说是"推理时只留这个小子结构"。思路同源，方向相反——一个省训练，一个省推理。</p>
+<h2>初始化的讲究：为什么 B 要置零</h2>
+<p>LoRA 有个细节：A 用高斯初始化，B 初始化为全零。</p>
+<pre class="notranslate"><code class="notranslate">ΔW = B × A，初始时 B=0 → ΔW=0 → W' = W
 </code></pre>
-<p>合并后就是普通的全量模型，<strong>延迟零增加</strong>。不像 adapter、prefix-tuning，推理时要多算东西。</p>
-<h2>实践中的坑</h2>
-<ol>
-<li><strong>r 不是越大越好</strong>：r=64 训得慢，还容易过拟合。从 r=16 开始试。</li>
-<li><strong>target_modules 的选择</strong>：只打 <code class="notranslate">q_proj,v_proj</code> 是 2021 年的做法。2025 年的经验：<strong>全线性层都打</strong>（q,k,v,o,gate,up,down），效果更好，参数量也就翻几倍，依然很小。</li>
-<li><strong>学习率要大</strong>：LoRA 参数少，需要更大的 lr（通常是全量微调的 5-10 倍）。用全量的 lr 会训不动。</li>
-<li><strong>多 LoRA 切换</strong>：一个基座 + N 个 LoRA（客服一个、代码一个），推理时动态切换。这是 2025 年 to B 落地的主流架构——<strong>1 个 70B 基座服务 10 个场景</strong>。</li>
-</ol>
+<p>训练开始的第一步，模型和预训练权重<strong>完全一致</strong>。这保证了微调是"从好位置出发"，而不是"先随机扰动再慢慢找回来"。如果 B 也随机初始化，训练初期模型行为会剧烈抖动，loss 先飙升再下降——白白浪费步数。</p>
+<p>这个设计有个名字：<strong>零初始化残差分支</strong>。ResNet 的残差块、Adapter 的初始化，用的都是同一思想：新增的模块初始时是"恒等映射"，只学"增量"。凡是"在预训练模型上加东西"，都要先保证"加了个寂寞"，再慢慢学。这是微调工程里最便宜的一课。</p>
+<p>训练时还有个配套技巧：A 的学习率通常设得比 B 大（LoRA+ 的思想就源于此）。因为 B 初始化为零，训练早期的梯度主要流经 A——两者的优化动态本来就不对称。细节决定收敛速度。</p>
+<h2>最优雅的一点：推理零开销</h2>
+<p>LoRA 训完，可以把 B·A 直接加回 W：</p>
+<pre class="notranslate"><code class="notranslate">W' = W + B·A   （提前算好，存成一份新权重）
+</code></pre>
+<p>合并后就是个普通的模型，<strong>推理延迟零增加</strong>。对比一下同时代的 adapter、prefix-tuning：它们在推理时要多算东西，延迟和复杂度都上去了。LoRA 是"训的时候省，跑的时候和全量一模一样"——这种"不留痕迹"的设计，是它能成为标配的关键。</p>
+<p>这还带来一个副产品：<strong>一个基座 + N 个 LoRA</strong>。训 10 个场景的 LoRA，每个几十 MB，存在硬盘里；推理时按需合并切换。今年 to B 落地的主流架构就是这个：<strong>1 个 70B 基座，服务 10 个场景</strong>，显存里永远只 load 一份基座。切换场景 = 换一个小权重文件，秒级完成。</p>
 <h2>QLoRA：再穷一点也能玩</h2>
+<p>LoRA 省的是"更新"的成本，但基座本身（64GB@32B）还是要进显存。QLoRA 再往下压了一层：</p>
 <div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 4-bit 量化基座 + LoRA</span>
 <span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-v">AutoModelForCausalLM</span>.<span class="pl-c1">from_pretrained</span>(
     <span class="pl-s">"Qwen3-32B"</span>,
-    <span class="pl-s1">load_in_4bit</span><span class="pl-c1">=</span><span class="pl-c1">True</span>,  <span class="pl-c"># 基座压到 4bit，32B 模型 18GB 显存搞定</span>
+    <span class="pl-s1">load_in_4bit</span><span class="pl-c1">=</span><span class="pl-c1">True</span>,   <span class="pl-c"># 基座压到 4bit：64GB → 18GB</span>
 )
-<span class="pl-c"># LoRA 部分用 16bit 训</span></pre></div>
-<p><strong>单卡 4090 微调 32B 模型</strong>，2025 年已经是常规操作。</p>
-<h2>一句话总结</h2>
-<p>LoRA 的本质是"承认微调的变化很小"。它把大模型微调从"千卡俱乐部"变成了"单卡游戏"，是 2025 年 AI 落地最重要的工程技术——没有之一。记住：r 从小试，lr 往大调，target 全打满。</p>
+<span class="pl-c"># LoRA 部分用 16bit 训，精度不受影响</span></pre></div>
+<p>基座用 NF4 量化到 4bit，LoRA 部分保持 16bit 训练。<strong>单卡 4090（24GB）微调 32B 模型</strong>，在今年已经是常规操作。</p>
+<p>注意 QLoRA 的 trade-off：量化基座会损失一点精度。对"风格/格式"微调（客服话术、代码风格）几乎无感；对"知识密集型"微调（让模型学新领域知识）影响稍大。动手前先问自己：我在教模型"新知识"，还是"新习惯"？前者要慎重，后者放心用。</p>
+<p>量化还有个细节：<strong>双重量化（double quantization）</strong>。量化本身需要的 scale 参数也要存，QLoRA 把 scale 再量化一次，又省一点显存。抠到这个粒度，说明 4bit 这条路已经被压榨得很干净了——再往下，就是 2bit 的新战场。</p>
+<h2>LoRA 的变体：DoRA 和 LoRA+</h2>
+<p>原版 LoRA 之后，社区有两个值得知道的改进：</p>
+<p><strong>DoRA（Weight-Decomposed LoRA）</strong>：把权重分解成"幅度"和"方向"，只用 LoRA 学方向，幅度单独学一个向量。直觉是：全量微调里，幅度和方向的变化模式不一样，拆开学更接近全量微调的行为。效果上，DoRA 在多个 benchmark 上比 LoRA 高 1-2 个点，代价是多一点点参数。</p>
+<p><strong>LoRA+</strong>：给 B 和 A 用不同的学习率（B 更大）。理由是 B 和 A 在优化中的角色不对称——B 接近输出，梯度尺度不一样。实测能加速收敛，尤其 r 较大时效果明显。</p>
+<p>要不要用？我的建议：<strong>先把原版 LoRA 跑通，遇到瓶颈再试变体</strong>。大部分"LoRA 效果不好"的问题，根子在数据和超参，不在变体。变体是最后 5% 的优化，不是前 95%。本末倒置，是微调新手最常见的死法。</p>
+<h2>LoRA vs 全量微调：什么时候必须全量</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>任务类型</th>
+<th>LoRA</th>
+<th>全量微调</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>学话术、格式、风格</td>
+<td>✅ 足够</td>
+<td>杀鸡用牛刀</td>
+</tr>
+<tr>
+<td>学新领域知识（大量新事实）</td>
+<td><g-emoji class="g-emoji" alias="warning">⚠️</g-emoji> 吃力，参数量小记不住</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>对齐（RLHF 后的 SFT）</td>
+<td>✅ 主流做法</td>
+<td>贵且容易灾难性遗忘</td>
+</tr>
+<tr>
+<td>预训练式继续训练</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>核心规律：<strong>LoRA 擅长学"模式"，不擅长学"知识"</strong>。想让模型记住 10 万条新事实，1% 的参数量就是不够——这是信息论决定的，不是调参能解决的。这时候要么全量微调，要么把知识放 RAG 里。</p>
+<p>还有一个反直觉的点：<strong>LoRA 更不容易灾难性遗忘</strong>。全量微调会动所有参数，容易把预训练的通用能力"洗掉"；LoRA 只动 1%，基座能力基本保留。这也是 to B 场景偏爱 LoRA 的原因——客服 LoRA 上线了，模型的代码能力还在，各管各的，互不干扰。</p>
+<h2>实践中的坑</h2>
+<p><strong>1. r 不是越大越好。</strong> r=64 训得慢，还容易过拟合。从 r=16 开始试，效果不够再往上加。记住上面的结论：瓶颈一般在数据，不在秩。</p>
+<p><strong>2. target_modules 全打满。</strong> 只打 <code class="notranslate">q_proj, v_proj</code> 是 2021 年论文的做法。现在的经验是：<strong>所有线性层都打</strong>（q,k,v,o,gate,up,down）。参数量翻几倍，但基数太小——1% 的几倍还是 1% 量级，效果提升却很明显。</p>
+<p><strong>3. 学习率要大。</strong> LoRA 只训 1% 的参数，需要更大的步长——通常是全量微调学习率的 5-10 倍。用全量的 lr 会"训不动"，loss 半天不降。反直觉，但这是今年各家微调手册里的共识。</p>
+<p><strong>4. 数据质量 &gt; 一切。</strong> 1000 条高质量的问答对，胜过 10 万条爬来的垃圾。LoRA 的参数量小，"记住"能力弱——它擅长学"模式"，不擅长学"知识"。想灌知识，要么上全量微调，要么走 RAG。<strong>别用微调干 RAG 的活。</strong></p>
+<p><strong>5. 多 LoRA 切换的工程。</strong> 一个基座 + N 个 LoRA，naive 的做法是每次合并/卸载权重，开销巨大。今年的解法是 S-LoRA/Punica 这类 unified batching：<strong>一个 batch 里同时跑多个 LoRA 的请求</strong>，各自用各自的 B·A。这是 to B 落地的最后一公里，也是很多人从 demo 走到生产时摔倒的地方。</p>
+<p><strong>6. 别拿 LoRA 去"继续预训练"。</strong> 有人拿 LoRA 去"灌"大量新领域文本，指望它学会新知识——结果是既没学会，又污染了原有能力。LoRA 的容量就那么点，继续预训练是"小马拉大车"。要加知识：走 RAG；要换基座能力：换更大的基座。<strong>认清工具的边界，比会用工具更重要。</strong></p>
+<h2>动手前的检查清单</h2>
+<p>如果你正准备微调，按这个顺序过一遍：</p>
+<ol>
+<li><strong>先问 RAG</strong>：要加的是"知识"还是"习惯"？知识走 RAG，习惯走微调；</li>
+<li><strong>r 从 16 起</strong>：不够再加，别一上来就 64；</li>
+<li><strong>lr 往大调</strong>：全量微调 lr 的 5-10 倍，看 loss 曲线确认"训得动"；</li>
+<li><strong>target 全打满</strong>：q,k,v,o,gate,up,down，一个别落；</li>
+<li><strong>数据先清洗</strong>：1000 条干净的 &gt; 10 万条脏的，格式统一比数量重要；</li>
+<li><strong>评估集先行</strong>：微调前先准备好评估集，否则你不知道它是"变好了"还是"变怪了"。</li>
+</ol>
+<p>LoRA 的本质，是"承认微调的变化很小"。它把大模型微调从"千卡俱乐部"变成了"单卡游戏"——不是因为它发明了什么魔法，而是因为它看穿了：<strong>预训练做了 99% 的工作，微调只需要做好剩下的那 1%</strong>。</p>
 <p>##{"timestamp":1753156800}</p></div>
   <div class="article-tail"></div>
   
