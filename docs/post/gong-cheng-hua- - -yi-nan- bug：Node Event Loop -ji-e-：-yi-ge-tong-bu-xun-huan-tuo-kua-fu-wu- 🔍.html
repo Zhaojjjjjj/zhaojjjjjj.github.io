@@ -227,6 +227,7 @@ node --cpu-prof --cpu-prof-name=lag.cpuprofile app.js</pre></div>
 <li><strong>混沌演练</strong>：故意在预发环境放大同步块，看告警链路能不能在雪崩前 catch 住。</li>
 </ol>
 <p>凌晨 3 点的教训很贵，但公式很便宜：<strong>lag 指标确认 → 火焰图定位 → 切片/worker/流式修复</strong>。以及永远记住——在 Node 里，同步代码的性能，要用生产数据量来衡量，测试环境的数据量都是"玩具"。</p>
+
 <p>##{"timestamp":1776830400}</p></div>
   <div class="article-tail"></div>
   
