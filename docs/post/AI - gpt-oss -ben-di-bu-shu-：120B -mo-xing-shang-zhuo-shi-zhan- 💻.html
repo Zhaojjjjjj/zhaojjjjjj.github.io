@@ -6,9 +6,9 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> OpenAI 在 2025 年 8 月 5 日开源了 gpt-oss-120b / 20b（Apache 2.0），这是 2019 年 GPT-2 之后首次开放权重。">
+<meta name="description" content="> OpenAI 时隔 6 年再次开放权重：gpt-oss-120b / 20b，Apache 2.0 协议。">
 <meta property="og:title" content="AI - gpt-oss 本地部署：120B 模型上桌实战 💻">
-<meta property="og:description" content="> OpenAI 在 2025 年 8 月 5 日开源了 gpt-oss-120b / 20b（Apache 2.0），这是 2019 年 GPT-2 之后首次开放权重。">
+<meta property="og:description" content="> OpenAI 时隔 6 年再次开放权重：gpt-oss-120b / 20b，Apache 2.0 协议。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%20gpt-oss%20-ben-di-bu-shu-%EF%BC%9A120B%20-mo-xing-shang-zhuo-shi-zhan-%20%F0%9F%92%BB.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
@@ -127,15 +127,18 @@ a{color:var(--accent-ink);text-decoration:none}
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
   <div class="article-body prose"><blockquote>
-<p>OpenAI 在 2025 年 8 月 5 日开源了 gpt-oss-120b / 20b（Apache 2.0），这是 2019 年 GPT-2 之后首次开放权重。这篇不聊新闻，聊实战：120B 的开放在你机器上到底能不能跑起来。</p>
+<p>OpenAI 时隔 6 年再次开放权重：gpt-oss-120b / 20b，Apache 2.0 协议。这篇不聊新闻，聊实战——120B 的开放在你的机器上到底能不能跑起来，跑起来之后，这笔账怎么算。</p>
 </blockquote>
-<h2>先算硬件账</h2>
+<p><strong>65GB。</strong></p>
+<p>这是 gpt-oss-120b 从 FP16 量化到 Q4 之后，权重的显存占用。五年前，跑 120B 参数的模型需要一整个机柜；现在，这个数字把"开源大模型"从新闻标题，变成了你桌上的一台机器。</p>
+<p>但别急着下单买卡——65GB 只是故事的一半。另一半，是大多数人第一次本地部署大模型时都会踩的坑。</p>
+<h2>先算硬件账：权重只是起步价</h2>
 <markdown-accessiblity-table><table role="table">
 <thead>
 <tr>
 <th>版本</th>
 <th>精度</th>
-<th>显存需求</th>
+<th>权重占用</th>
 <th>能跑的机器</th>
 </tr>
 </thead>
@@ -144,7 +147,7 @@ a{color:var(--accent-ink);text-decoration:none}
 <td>120b FP16</td>
 <td>16bit</td>
 <td>~240GB</td>
-<td>3×H100 / 8×A100</td>
+<td>多卡 H100/A100 集群</td>
 </tr>
 <tr>
 <td>120b Q8</td>
@@ -156,7 +159,7 @@ a{color:var(--accent-ink);text-decoration:none}
 <td>120b Q4</td>
 <td>4bit</td>
 <td>~65GB</td>
-<td>1×H100 / 2×4090</td>
+<td>双 4090 / Mac Studio 128GB+</td>
 </tr>
 <tr>
 <td>20b Q4</td>
@@ -166,8 +169,32 @@ a{color:var(--accent-ink);text-decoration:none}
 </tr>
 </tbody>
 </table></markdown-accessiblity-table>
-<p><strong>结论</strong>：120b 的甜点是 Q4 量化，65GB——一台 Mac Studio（192GB 统一内存）或双 4090 能跑。20b 则人人可玩。</p>
-<h2>部署三件套</h2>
+<p><strong>Q4 是 120b 的甜点</strong>：精度损失可接受，硬件门槛从"集群"降到"一台工作站"。20b 则人人可玩，单卡 4090 就能跑顺。</p>
+<p>但这张表有个隐形的大坑：<strong>它只算了权重，没算 KV cache</strong>。</p>
+<h3>被遗忘的 KV cache</h3>
+<p>推理时，模型要缓存所有已生成 token 的 Key/Value，显存占用随上下文长度线性增长：</p>
+<pre class="notranslate"><code class="notranslate">KV cache ≈ 2 × 层数 × hidden_dim × seq_len × 精度字节数
+</code></pre>
+<p>以 32K 上下文为例，120b 级别的模型，KV cache 轻松吃掉<strong>几十 GB</strong>——很多人按"65GB 权重"买了双 4090（48GB 显存……不够），部署时才发现连 16K 上下文都开不起来。</p>
+<p><strong>算账公式</strong>：权重 + KV cache（按你的最大上下文算）+ 框架开销 &lt; 可用显存 × 0.9。留 10% 裕量，OOM 在生产环境是最贵的故障。</p>
+<p>Mac 的统一内存架构在这里是意外之喜：192GB 统一内存的 Mac Studio，权重和 KV cache 都在同一块内存里，没有"显存墙"，是 Q8 乃至 FP16 的性价比之选——代价是推理速度比 CUDA 卡慢一截。</p>
+<h2>量化到底在干什么：为什么 Q4 掉点这么小</h2>
+<p>直觉上，把 16bit 砍到 4bit，精度应该崩。但实测 Q4 在常规任务上几乎无感，原因有三：</p>
+<p><strong>1. 权重的分布是"中间多、两头少"。</strong> 大部分权重集中在 0 附近，真正重要的大权重是少数。per-group 量化（每 32/128 个权重一组，各自定缩放系数）能很好地保留这种分布——组内精度高，组间自适应。</p>
+<p><strong>2. 大模型有冗余。</strong> 120B 参数里，相当一部分是在"备胎"。4bit 砍掉的主要是冗余部分的表达精度，核心的语义方向保住了。这也是为什么<strong>模型越大，量化越耐砍</strong>——20b 的 Q4 掉点通常比 120b 明显。</p>
+<p><strong>3. 掉点集中在特定任务。</strong> Q4 vs FP16 的差距不在日常问答，而在<strong>数学推导、多步推理、长代码生成</strong>——需要精确数值传递的任务。日常用无感，数学竞赛别用，这个结论至今成立。</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> GGUF 的 K-quants 是社区验证最多的选择</span>
+<span class="pl-c"><span class="pl-c">#</span> Q4_K_M：中等大小，质量与体积的最佳平衡点</span>
+<span class="pl-c"><span class="pl-c">#</span> Q8_0：几乎无损，显存够就上它</span></pre></div>
+<p>选量化格式的原则：<strong>显存够就 Q8，不够就 Q4_K_M，别碰 Q2/Q3</strong>——那是"能跑"和"能用"的区别。</p>
+<h2>多卡并行：120B 是怎么塞进两张卡的</h2>
+<p>单卡 24GB 显存，65GB 的权重怎么跑？答案是<strong>把模型切开</strong>，两种切法：</p>
+<p><strong>张量并行（tensor parallel）</strong>：把每一层的矩阵乘法切分到多卡，每卡算一半，结果做 all-reduce 汇总。vLLM 一行参数搞定：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">vllm serve ./models --tensor-parallel-size 2 --quantization fp8</pre></div>
+<p>代价是卡间通信——每层都要同步一次。NVLink 下几乎无感，PCIe 下吞吐打 8 折左右。<strong>买双卡前先看主板：两条 x16 槽位和 NVLink 桥，是 120b 流畅运行的隐藏门票。</strong></p>
+<p><strong>流水线并行（pipeline parallel）</strong>：按层切分，前 N 层放卡 1，后 N 层放卡 2，卡间只传激活值。通信量小，但有 pipeline bubble（卡 2 要等卡 1），延迟敏感场景不如张量并行。</p>
+<p>还有一个诚实提醒：双 4090 共 48GB 显存，65GB 权重是放不下的——需要把部分层 offload 到系统内存（llama.cpp 支持按层卸载），速度打 7 折左右。想满血运行，要么 2×A100 80GB，要么 Mac Studio 192GB 统一内存（权重和 KV cache 全在同一块内存，没有"显存墙"）。<strong>"双 4090 能跑"和"双 4090 跑得爽"，是两回事。</strong></p>
+<h2>推理框架三件套：没有银弹，只有 trade-off</h2>
 <div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 1. vLLM（生产）：吞吐最高</span>
 vllm serve openai/gpt-oss-120b --quantization fp8 --max-model-len 32768
 
@@ -176,21 +203,165 @@ ollama run gpt-oss:120b
 
 <span class="pl-c"><span class="pl-c">#</span> 3. llama.cpp（Mac/边缘）：统一内存的福音</span>
 llama-server -m gpt-oss-120b-Q4_K_M.gguf --ctx-size 32768</pre></div>
-<h2>性能实测要点</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>维度</th>
+<th>vLLM</th>
+<th>Ollama</th>
+<th>llama.cpp</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心优势</td>
+<td>PagedAttention + continuous batching，吞吐最高</td>
+<td>开箱即用，DX 最好</td>
+<td>CPU/统一内存，硬件亲和最广</td>
+</tr>
+<tr>
+<td>并发</td>
+<td>生产级（数百并发）</td>
+<td>尝鲜级</td>
+<td>低并发</td>
+</tr>
+<tr>
+<td>部署复杂度</td>
+<td>高（CUDA 环境、调参）</td>
+<td>一行命令</td>
+<td>中等（编译/找预编译包）</td>
+</tr>
+<tr>
+<td>适用</td>
+<td>对外服务、高吞吐</td>
+<td>快速验证、个人用</td>
+<td>Mac、边缘设备、无 N 卡</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>vLLM 的护城河是 <strong>PagedAttention</strong>：KV cache 按块分配、按需换入换出，显存碎片率大幅下降，同样硬件能多扛数倍并发。做对外服务，别无二选。</p>
+<p>Ollama 的价值是<strong>把"跑起来"的门槛降到零</strong>——但它的调度是单用户思维，拿它扛生产流量，等于拿自行车送快递。</p>
+<h2>从权重到服务：实战链路</h2>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> 1. 拉权重：GGUF 是分片文件，开传输加速+断点续传</span>
+pip install <span class="pl-s"><span class="pl-pds">"</span>huggingface_hub[hf_transfer]<span class="pl-pds">"</span></span>
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download <span class="pl-k">&lt;</span>官方repo<span class="pl-k">&gt;</span> \
+  --include <span class="pl-s"><span class="pl-pds">"</span>*Q4_K_M*<span class="pl-pds">"</span></span> --local-dir ./models
+
+<span class="pl-c"><span class="pl-c">#</span> 2. 校验：权重文件就是可执行代码，只从官方渠道拉</span>
+sha256sum ./models/<span class="pl-k">*</span> <span class="pl-k">&gt;</span> checksums.txt  <span class="pl-c"><span class="pl-c">#</span> 与官方公布值比对</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 3. 起服务（vLLM，OpenAI 兼容接口）</span>
+vllm serve ./models --quantization fp8 \
+  --max-model-len 32768 --port 8000
+
+<span class="pl-c"><span class="pl-c">#</span> 4. 验证：现有代码几乎不用改</span>
+curl http://localhost:8000/v1/chat/completions \
+  -H <span class="pl-s"><span class="pl-pds">"</span>Content-Type: application/json<span class="pl-pds">"</span></span> \
+  -d <span class="pl-s"><span class="pl-pds">'</span>{"model": "gpt-oss-120b",</span>
+<span class="pl-s">       "messages": [{"role": "user", "content": "用 Python 写快排"}]}<span class="pl-pds">'</span></span>
+
+<span class="pl-c"><span class="pl-c">#</span> 5. 生产化：docker-compose 固化（别裸跑 nohup）</span>
+<span class="pl-c"><span class="pl-c">#</span> vllm:</span>
+<span class="pl-c"><span class="pl-c">#</span>   image: vllm/vllm-openai:latest</span>
+<span class="pl-c"><span class="pl-c">#</span>   command: --model /models --tensor-parallel-size 2 --quantization fp8</span>
+<span class="pl-c"><span class="pl-c">#</span>   deploy:</span>
+<span class="pl-c"><span class="pl-c">#</span>     resources:</span>
+<span class="pl-c"><span class="pl-c">#</span>       reservations:</span>
+<span class="pl-c"><span class="pl-c">#</span>         devices: [{driver: nvidia, count: 2, capabilities: [gpu]}]</span></pre></div>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 客户端：一行改地址即可接入</span>
+<span class="pl-k">from</span> <span class="pl-s1">openai</span> <span class="pl-k">import</span> <span class="pl-v">OpenAI</span>
+<span class="pl-s1">client</span> <span class="pl-c1">=</span> <span class="pl-en">OpenAI</span>(<span class="pl-s1">base_url</span><span class="pl-c1">=</span><span class="pl-s">"http://localhost:8000/v1"</span>, <span class="pl-s1">api_key</span><span class="pl-c1">=</span><span class="pl-s">"not-needed"</span>)</pre></div>
+<p>OpenAI 兼容接口是本地部署的最大红利：<strong>业务代码不用重写</strong>，切的只是 base_url。今天调云端 API，明天切本地模型，迁移成本趋近于零。</p>
+<h2>性能实测与预期管理</h2>
+<p>先说官方对标：120b 对标 o4-mini，20b 对标 o3-mini。实测下来，代码和数学确实接近，但有三个预期要调：</p>
+<p><strong>1. 中文弱一档。</strong> 训练数据的英文 bias 是真实的——中文长文本的连贯性和指令跟随，比英文任务差半档。做中文客服/写作，先拿自己的语料测，别信英文榜单。</p>
+<p><strong>2. 长上下文衰减。</strong> 标 128K 上下文，8K 之后有效注意力就开始稀释（大海捞针问题，所有模型都一样）。RAG 场景下，检索 top_k 拼进去比硬塞全文靠谱得多。</p>
+<p><strong>3. 首 token 慢。</strong> prefill 阶段要处理整个 prompt，120b 在双 4090 上首 token 可能要等好几秒——流式输出能掩盖一部分，但做不了实时语音这种场景。<strong>吞吐和延迟是两笔账</strong>，vLLM 优化的是前者。</p>
+<p>速度参考：Q4 在双 4090 上约 20-30 tok/s，写代码够用，实时对话略肉；20b Q4 在单 4090 上能到 60+ tok/s，日常助手无压力。</p>
+<p>速度参考（社区实测的量级，具体以你的硬件和驱动为准）：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>配置</th>
+<th>量化</th>
+<th>上下文</th>
+<th>首 token</th>
+<th>生成速度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>双 4090（张量并行）</td>
+<td>Q4</td>
+<td>8K</td>
+<td>约 3s</td>
+<td>约 25 tok/s</td>
+</tr>
+<tr>
+<td>双 4090（张量并行）</td>
+<td>Q4</td>
+<td>32K</td>
+<td>10s+</td>
+<td>约 15 tok/s</td>
+</tr>
+<tr>
+<td>Mac Studio 192GB</td>
+<td>Q8</td>
+<td>8K</td>
+<td>约 5s</td>
+<td>约 12 tok/s</td>
+</tr>
+<tr>
+<td>单 4090（20b）</td>
+<td>Q4</td>
+<td>8K</td>
+<td>&lt;1s</td>
+<td>60+ tok/s</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>注意第二行的断崖：上下文从 8K 拉到 32K，首 token 从 3s 涨到 10s+——prefill 是平方级复杂度，<strong>长上下文的第一道税交在首 token，不在生成速度</strong>。做长文档问答，流式输出只能掩盖生成阶段，掩盖不了 prefill。</p>
+<h2>六个坑，提前知道</h2>
 <ol>
-<li><strong>对标 o4-mini</strong>：官方说 120b 对标 o4-mini，20b 对标 o3-mini。实测代码和数学确实接近，但<strong>中文和长上下文弱一档</strong>——训练数据的 bias。</li>
-<li><strong>量化掉点</strong>：Q4 比 FP16 在 GSM8K 上掉 2-3 个点，日常用无感，数学竞赛别用。</li>
-<li><strong>速度</strong>：Q4 在双 4090 上约 25 tok/s，写代码够用，实时对话略肉。</li>
+<li><strong>GGUF 分片下载</strong>：几十 GB 的文件，不开断点续传就是赌人品，<code class="notranslate">hf_transfer</code> 必开。</li>
+<li><strong>NUMA/PCIe 带宽</strong>：双卡推理，卡间通信走 PCIe/NVLink，插错槽位（x8 vs x16）吞吐直接打折。</li>
+<li><strong>散热和噪音</strong>：双 4090 全速推理，放在办公室等于放了台吹风机——上架前先解决散热。</li>
+<li><strong>内网服务别裸奔</strong>：vLLM 默认无鉴权，8000 端口暴露到公网等于把模型送人。反向代理 + API key 是底线。</li>
+<li><strong>License 是 Apache 2.0</strong>：商用友好，但注意商标限制——你可以卖服务，不能说自己是 OpenAI。</li>
+<li><strong>权重供应链</strong>：只从官方 repo 拉，校验 hash。被投毒的权重是完美的后门载体，模型文件不审计就上线，等于裸奔。</li>
 </ol>
-<h2>开源的真正价值</h2>
-<p>不是"白嫖 GPT"，而是三件事：</p>
+<h2>开源的真正价值：算一笔 TCO</h2>
+<p>"白嫖 GPT"是对开源最大的误解。真正的价值有三件：</p>
+<p><strong>1. 可微调。</strong> 闭源 API 不能改权重。gpt-oss 可以 LoRA 训成你的领域专家——医疗、法律、垂直客服，微调后的 120b 在自己领域能打赢更大的通用模型。</p>
+<p><strong>2. 可审计。</strong> 权重开放，安全团队能自己测——这是进金融、政务的门票。数据不出内网，更是合规红线场景的唯一解。</p>
+<p><strong>3. 生态。</strong> 开放权重一周，HuggingFace 上就冒出几百个微调版。开放权重的网络效应，闭源永远吃不到。</p>
+<p>再算一笔账，决定"自建还是调 API"：</p>
+<pre class="notranslate"><code class="notranslate">自建月均成本 = 硬件折旧（双 4090 按 3 年摊 ≈ ¥1,500/月）+ 电费（约 ¥500/月）
+API 成本     = 月 token 量 × 单价
+
+breakeven 点：月调用量超过约 2-3 亿 token（按当时价格），自建更便宜
+</code></pre>
+<p>调用量小 → API 灵活；调用量大、数据敏感 → 自建是印钞机。再算一笔具体的账（按当时公开价格量级估算）：</p>
+<pre class="notranslate"><code class="notranslate">场景：客服问答，月调用 5 亿 token（混合输入输出）
+  API 方案：5亿 × 约¥0.02/千token ≈ ¥10,000/月
+  自建方案：双 4090 折旧 ¥1,500 + 电费 ¥500 + 运维分摊 ≈ ¥3,000/月
+  → 月省 ¥7,000，约 3 万的硬件投入不到 5 个月回本
+
+但如果月调用只有 5 千万 token：
+  API 只要约 ¥1,000/月，自建反而亏
+</code></pre>
+<p><strong>没有标准答案，只有 breakeven 点</strong>：先算调用量，再决定买卡。调用量小 → API 灵活；调用量大、数据敏感 → 自建是印钞机。</p>
+<h2>本地部署检查清单</h2>
+<p>如果你打算把 gpt-oss-120b 跑起来，按这个顺序过一遍：</p>
 <ol>
-<li><strong>可微调</strong>：闭源 API 不能改权重。gpt-oss 可以 LoRA（见 7 月那篇）训成你的领域专家。</li>
-<li><strong>可审计</strong>：权重开放，安全团队能自己测——这是进金融/政务的门票。</li>
-<li><strong>生态</strong>：HuggingFace 上一周就出了 200+ 微调版。开放权重的网络效应，闭源永远吃不到。</li>
+<li><strong>定用途</strong>：尝鲜 → Ollama 一行命令；生产服务 → vLLM；Mac/统一内存 → llama.cpp。别拿尝鲜工具扛生产流量。</li>
+<li><strong>算总账</strong>：权重 + KV cache（按你的最大上下文算）+ 框架开销 &lt; 可用显存 × 0.9。KV cache 是最常见的背刺来源。</li>
+<li><strong>选量化</strong>：Q4_K_M 是甜点；数学/代码重度场景先做小样本对比，掉点超预期就升 Q8。</li>
+<li><strong>验供应链</strong>：只从官方渠道拉权重，校验 hash。权重文件就是可执行代码。</li>
+<li><strong>做隔离</strong>：内网服务加鉴权，别把无密码的端口暴露到公网。</li>
+<li><strong>算 TCO</strong>：先算 breakeven 点，再下单买卡。硬件是沉没成本，调用量是变量。</li>
 </ol>
-<h2>一句话总结</h2>
-<p>gpt-oss-120b 的 Q4 版本是 2025 年"最强可本地部署模型"。它证明了一件事：<strong>开放权重不是慈善，是生态战略</strong>。OpenAI 时隔 6 年重新拥抱开源，说明它终于想明白了——模型会过时，生态不会。</p>
+<p>跑起来只是第一步。跑得稳、跑得值钱，才是本地部署的真正考题。</p>
 <p>##{"timestamp":1755230400}</p></div>
   <div class="article-tail"></div>
   
