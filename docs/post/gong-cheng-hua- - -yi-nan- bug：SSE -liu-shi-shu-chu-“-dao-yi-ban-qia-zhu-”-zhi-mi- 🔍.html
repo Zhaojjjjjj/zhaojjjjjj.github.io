@@ -6,9 +6,9 @@
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
 
-<meta name="description" content="> 做 AI 应用的流式输出，SSE（Server-Sent Events）是标配。">
+<meta name="description" content="周二下午 3 点，客服群炸了：'AI 回答到一半就不动了，好几个用户在骂。">
 <meta property="og:title" content="工程化 - 疑难 bug：SSE 流式输出“到一半卡住”之谜 🔍">
-<meta property="og:description" content="> 做 AI 应用的流式输出，SSE（Server-Sent Events）是标配。">
+<meta property="og:description" content="周二下午 3 点，客服群炸了：'AI 回答到一半就不动了，好几个用户在骂。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/gong-cheng-hua-%20-%20-yi-nan-%20bug%EF%BC%9ASSE%20-liu-shi-shu-chu-%E2%80%9C-dao-yi-ban-qia-zhu-%E2%80%9D-zhi-mi-%20%F0%9F%94%8D.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
@@ -126,53 +126,147 @@ a{color:var(--accent-ink);text-decoration:none}
     <h1 class="article-title">工程化 - 疑难 bug：SSE 流式输出“到一半卡住”之谜 🔍</h1>
     <div class="article-meta" id="article-meta" data-comments=""></div>
   </header>
-  <div class="article-body prose"><blockquote>
-<p>做 AI 应用的流式输出，SSE（Server-Sent Events）是标配。但生产环境跑久了，你会遇到一个幽灵 bug：用户说"回答到一半卡住了"，后端日志却显示"正常返回"。这篇复盘这个经典坑。</p>
-</blockquote>
-<h2>症状</h2>
-<ul>
-<li>用户侧：流式输出到一半，突然不动了，也没有报错。</li>
-<li>服务端：OpenAI/自建模型的 API 调用正常完成，200 返回。</li>
-<li>诡异的是：刷新重试就好，低峰期不出现，高峰期偶发。</li>
-</ul>
-<h2>排查过程</h2>
-<p>第一反应是模型 API 的问题，加了重试——没用。第二反应是前端渲染，加了日志——发现 <strong>EventSource 的 <code class="notranslate">onmessage</code> 在某个时间点后就再也没触发</strong>，但 <code class="notranslate">onerror</code> 也没触发，<code class="notranslate">readyState</code> 还是 1（OPEN）。</p>
-<p>这就是 SSE 最坑的地方：<strong>连接"半死"时，浏览器不会告诉你</strong>。</p>
-<h2>根因：三层超时</h2>
-<p>最后定位到是三层超时叠加：</p>
+  <div class="article-body prose"><p>周二下午 3 点，客服群炸了："AI 回答到一半就不动了，好几个用户在骂。"</p>
+<p>我打开后端日志：200，正常返回，平均用时 42 秒——一切正常。又打开前端监控：没有报错，没有异常上报。然后我去复现：问了个复杂问题，回答吐到一半，真的不动了。不报错，不转圈，就是停在那，像时间被按了暂停。</p>
+<p>用户说卡住了，服务器说没毛病。<strong>两个人说的都是真话</strong>——这就是 SSE（Server-Sent Events）流式输出最幽灵的一个 bug：连接"半死"时，没有任何一方会告诉你。</p>
+<h2>症状三联</h2>
+<p>这个 bug 有一套标志性症状，对上两条就可以直接按本文的方子抓药：</p>
 <ol>
-<li><strong>Nginx <code class="notranslate">proxy_read_timeout</code></strong>（默认 60s）：上游（模型 API）如果 60 秒内没有数据，Nginx 断开。但 SSE 是长连接，模型思考时（thinking 阶段）可能 60 秒零输出。</li>
-<li><strong>浏览器自身的"静默超时"</strong>：某些浏览器/代理对长时间无数据的连接会悄悄掐掉，不触发 error。</li>
-<li><strong>EventSource 没有心跳机制</strong>：原生 EventSource 不会自动发 ping，服务端不主动推数据，连接就是"死"的。</li>
+<li><strong>用户侧</strong>：流式输出到一半突然不动，没有报错，页面也不转圈；</li>
+<li><strong>服务端</strong>：模型 API 调用正常完成，200 返回，日志干干净净；</li>
+<li><strong>玄学特征</strong>：刷新重试就好，低峰期不出现，高峰期偶发。</li>
 </ol>
-<h2>修复方案</h2>
-<p>四件套，缺一不可：</p>
+<p>第三条最迷惑人——"偶发 + 自愈"让人下意识觉得是模型 API 抖动。但<strong>能自愈的，不一定是上游的问题</strong>。</p>
+<h2>排查弯路：两个"第一反应"都是错的</h2>
+<p>第一反应是模型 API 的问题。加了重试、加了超时熔断——没用。重试解决的是"失败"，而这里根本没有失败，服务端每次都 200。</p>
+<p>第二反应是前端渲染的问题。给 <code class="notranslate">onmessage</code> 加日志，发现<strong>在某个时间点后，<code class="notranslate">onmessage</code> 就再也没触发过</strong>；但 <code class="notranslate">onerror</code> 也没触发，<code class="notranslate">readyState</code> 还是 1（OPEN）。连接显示"开着"，数据却永远不再来。</p>
+<p>这就是 SSE 最坑的地方：<strong>HTTP 长连接"半死"时，浏览器不会告诉你</strong>。TCP 层面连接可能已经断了，但只要没有 RST 包到达，浏览器就认为连接还活着，EventSource 就傻傻地等着——等一个永远不会来的包。</p>
+<h2>根因：三层超时叠加</h2>
+<p>最后定位到，是三层超时叠在一起，缺一层都不会出事：</p>
+<p><strong>第一层：Nginx <code class="notranslate">proxy_read_timeout</code>（默认 60s）。</strong> 上游 60 秒内没有数据，Nginx 就掐掉连接。而 SSE 是长连接——模型进入深度思考（thinking）阶段时，可能 60 秒零输出。Nginx 可不管你在"思考"，它只认"有没有数据"。</p>
+<p><strong>第二层：<code class="notranslate">proxy_buffering</code> 默认开启。</strong> Nginx 会先把上游的响应攒起来，攒够了（或上游结束了）再发给客户端。对流式输出来说，这等于把"流"变成了"等全量再一次性吐"——用户看到的就是"半天没动静，然后突然全出来了"，在某些网络条件下还会直接卡死。</p>
+<p><strong>第三层：EventSource 没有心跳机制。</strong> 原生 EventSource 不会自动发 ping，服务端不主动推数据，中间的代理或浏览器就可能悄悄掐掉长时间无数据的连接——而且不通知你。<strong>三层里，Nginx 负责"掐"，EventSource 负责"哑"，用户负责"骂"。</strong></p>
+<p>为什么低峰期不出现？因为低峰期链路短、代理少、问题简单思考时间短，三层超时的每一层都不容易被触发。高峰期一到，排队 + 长思考 + 多层代理，三个条件凑齐就炸。这也解释了为什么测试环境永远复现不了——<strong>测试环境的问题都太简单了，简单到触发不了 60 秒超时</strong>。</p>
+<h2>更深一层：为什么偏偏是"到一半"</h2>
+<p>为什么卡住总是发生在"一半"，而不是开头？因为流式输出的"数据节奏"是不均匀的：</p>
+<ul>
+<li><strong>开头</strong>：连接建立，第一个 token 很快出来（TTFB 短），用户看到字在蹦，心里踏实；</li>
+<li><strong>中间</strong>：模型进入深度思考（thinking）阶段——内部在推理，但<strong>零 token 输出</strong>。这一段可能持续几十秒，是整条链路最脆弱的窗口；</li>
+<li><strong>结尾</strong>：答案开始稳定输出，节奏均匀。</li>
+</ul>
+<p>Nginx 的 60 秒 <code class="notranslate">proxy_read_timeout</code>，掐的恰恰就是这个"思考窗口"。用户看到的是"吐到一半不动了"，实际是"模型正在想，但想得太久，代理等不及了"。<strong>SSE 断流的本质，是"思考的沉默"和"代理的耐心"之间的矛盾</strong>——模型越强、想得越久，这个矛盾越尖锐。这也解释了为什么这个 bug 在推理模型普及后才集中爆发：以前的模型想都不想、直接吐，没有沉默期。</p>
+<h2>心跳间隔怎么定</h2>
+<p>15 秒这个数字不是拍脑袋的，它要同时满足三个约束：</p>
+<ul>
+<li><strong>小于最短的那道超时门</strong>：Nginx 默认 60s，心跳间隔必须 &lt; 60s，留余量取 15s；</li>
+<li><strong>大于网络抖动的容忍度</strong>：间隔太短（如 1s），弱网环境下心跳包本身会丢，触发误重连；</li>
+<li><strong>别太浪费带宽</strong>：心跳是注释行，几乎 0 成本，但 1 秒一次的心跳在百万连接下也是可观的流量。</li>
+</ul>
+<p>经验公式：<strong>心跳间隔 = 最短超时门 / 4</strong>。Nginx 60s → 15s；如果你的网关超时是 120s，30s 也行。调完记得压测验证：模拟 70 秒零输出，看连接还活着没。</p>
+<h2>修复：四件套，缺一不可</h2>
 <div class="highlight highlight-source-nginx"><pre class="notranslate"><span class="pl-c"># 1. Nginx：调大超时 + 关闭缓冲</span>
-<span class="pl-c1">proxy_read_timeout</span> <span class="pl-c1">300s</span><span class="pl-c1">;</span>
-<span class="pl-c1">proxy_buffering</span> off<span class="pl-c1">;</span>
-X-Accel-Buffering: no<span class="pl-c1">;</span></pre></div>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 2. 服务端：定时发心跳注释（SSE 规范里以 : 开头的行是注释，浏览器忽略但会重置超时计时）</span>
+<span class="pl-c1">location</span> /api/chat <span class="pl-c1">{</span>
+    <span class="pl-c1">proxy_read_timeout</span> <span class="pl-c1">300s</span><span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_send_timeout</span> <span class="pl-c1">300s</span><span class="pl-c1">;</span>
+    <span class="pl-c1">proxy_buffering</span> off<span class="pl-c1">;</span>                # 关键：别攒包，有多少吐多少
+    <span class="pl-c1">proxy_set_header</span> X-Accel-Buffering no<span class="pl-c1">;</span>
+<span class="pl-c1">}</span></pre></div>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 2. 服务端：定时发心跳</span>
+<span class="pl-c"># SSE 规范里以 ":" 开头的行是注释，浏览器会忽略，</span>
+<span class="pl-c"># 但"有数据在流动"这个事实会重置每一层的超时计时器</span>
 <span class="pl-k">async</span> <span class="pl-k">def</span> <span class="pl-en">stream</span>():
     <span class="pl-k">while</span> <span class="pl-c1">True</span>:
-        <span class="pl-k">yield</span> <span class="pl-s">": ping<span class="pl-cce">\n</span><span class="pl-cce">\n</span>"</span>
+        <span class="pl-k">yield</span> <span class="pl-s">": ping<span class="pl-cce">\n</span><span class="pl-cce">\n</span>"</span>   <span class="pl-c"># 每 15 秒一次</span>
         <span class="pl-k">await</span> <span class="pl-s1">asyncio</span>.<span class="pl-c1">sleep</span>(<span class="pl-c1">15</span>)</pre></div>
+<p>心跳是性价比最高的修复：不改架构，不动前端，一行 yield 让三层超时全部续命。如果只能做一件事，先做这个。</p>
 <div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 3. 前端：用 fetch + ReadableStream 代替 EventSource</span>
-<span class="pl-c">// EventSource 不支持自定义 header（带不了 Authorization），</span>
-<span class="pl-c">// fetch 流可以，而且能自己实现超时检测</span>
+<span class="pl-c">// 自研超时检测：30 秒无数据就主动重连</span>
+<span class="pl-k">const</span> <span class="pl-s1">controller</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-v">AbortController</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">const</span> <span class="pl-s1">timer</span> <span class="pl-c1">=</span> <span class="pl-en">setInterval</span><span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-kos">{</span>
+  <span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-v">Date</span><span class="pl-kos">.</span><span class="pl-en">now</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">-</span> <span class="pl-s1">lastChunkTime</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">30000</span><span class="pl-kos">)</span> <span class="pl-s1">controller</span><span class="pl-kos">.</span><span class="pl-en">abort</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 触发重连逻辑</span>
+<span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-c1">5000</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 <span class="pl-k">const</span> <span class="pl-s1">reader</span> <span class="pl-c1">=</span> <span class="pl-s1">response</span><span class="pl-kos">.</span><span class="pl-c1">body</span><span class="pl-kos">.</span><span class="pl-en">getReader</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
-<span class="pl-k">const</span> <span class="pl-s1">timer</span> <span class="pl-c1">=</span> <span class="pl-en">setTimeout</span><span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-s1">controller</span><span class="pl-kos">.</span><span class="pl-en">abort</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-c1">30000</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 30s 无数据就重连</span></pre></div>
-<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 4. 断点续传：用 Last-Event-ID</span>
-<span class="pl-c">// 服务端给每个 chunk 带 id，前端重连时带上，服务端从断点继续</span></pre></div>
-<h2>为什么用 fetch 代替 EventSource</h2>
-<p>2025 年的共识：<strong>新项目别用 EventSource 了</strong>。</p>
+<span class="pl-c">// ... 循环 read，每收到 chunk 更新 lastChunkTime</span></pre></div>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 4. 断点续传：Last-Event-ID</span>
+<span class="pl-c">// 服务端给每个 chunk 带上 id: &lt;n&gt;</span>
+<span class="pl-c">// 前端重连时带上 Last-Event-ID: &lt;n&gt;</span>
+<span class="pl-c">// 服务端从 n+1 继续吐——用户无感续流</span></pre></div>
+<h2>代理链全景：你的请求经过了多少道"超时门"</h2>
+<p>生产环境的请求很少直连后端。数一数你的 SSE 请求要经过几道"超时门"：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>链路节点</th>
+<th>默认超时</th>
+<th>对 SSE 的态度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CDN</td>
+<td>100s 无数据掐</td>
+<td>有些档位不支持长连接调优</td>
+</tr>
+<tr>
+<td>WAF / 网关</td>
+<td>60s~120s</td>
+<td>各家不同，多数可配</td>
+</tr>
+<tr>
+<td>K8s Ingress</td>
+<td>60s（nginx-ingress 默认）</td>
+<td>和 Nginx 同理</td>
+</tr>
+<tr>
+<td>Nginx 反向代理</td>
+<td><code class="notranslate">proxy_read_timeout</code> 60s</td>
+<td>本文主角</td>
+</tr>
+<tr>
+<td>后端框架（Gunicorn/Uvicorn）</td>
+<td>worker 超时 30s~60s</td>
+<td>超时杀 worker，连接直接断</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p><strong>每一道门的默认值，都是按"短请求"设计的。</strong> SSE 是长连接异类，要过五关，每一关都要单独调。最坑的是 CDN 那一关：有些 CDN 的超时调不了，这时候只能让 SSE 域名绕过 CDN，或者接受"定时重连"作为常态。</p>
+<p>排查时从后往前查：先确认后端直连正常，再一层层往前加代理，看在哪一层开始断。<strong>每次只加一层</strong>，这是定位多层代理问题唯一的笨办法，也是最有效的办法。</p>
+<h2>为什么新项目别用 EventSource 了</h2>
+<p>这是前后端的共识，四个理由：</p>
+<ol>
+<li><strong>只支持 GET</strong>：prompt 太长塞不进 URL，长上下文场景直接出局；</li>
+<li><strong>不支持自定义 header</strong>：Authorization 只能放 URL 参数里——安全审计过不去；</li>
+<li><strong>错误处理黑盒</strong>：就是本文这个坑，半死不报错；</li>
+<li><strong>无心跳、无续传</strong>：上面两节的方案，EventSource 原生一个都不支持。</li>
+</ol>
+<p><code class="notranslate">fetch</code> + <code class="notranslate">ReadableStream</code> + <code class="notranslate">TextDecoder</code> 的组合，代码多 20 行，但<strong>可控性高一个维度</strong>：超时你自己定，重连你自己写，header 随便带。</p>
+<h2>那 WebSocket 呢？</h2>
+<p>有人问：既然 SSE 这么脆弱，为什么不用 WebSocket？答案是 trade-off：</p>
 <ul>
-<li>不支持 POST（只能 GET，prompt 太长塞不下 URL）。</li>
-<li>不支持自定义 header（Authorization 只能放 URL 参数，不安全）。</li>
-<li>错误处理黑盒（就是本文这个坑）。</li>
-<li><code class="notranslate">fetch</code> + <code class="notranslate">ReadableStream</code> + <code class="notranslate">TextDecoder</code> 组合，代码多 20 行，但可控性高一个维度。</li>
+<li><strong>WebSocket 是双向的</strong>：协议开销大，需要自己定义消息格式，还要处理连接管理；</li>
+<li><strong>SSE 是单向的</strong>：就是 HTTP，穿防火墙能力最强，心智负担最低；</li>
+<li><strong>实际选择</strong>：AI 聊天这种"服务端单向推流"场景，SSE over fetch 是主流；需要双向实时（比如语音对话打断），才上 WebSocket。</li>
 </ul>
-<h2>一句话总结</h2>
-<p>SSE 断流的本质是"长连接在多层代理面前的脆弱性"。记住三板斧：<strong>Nginx 关缓冲调超时、服务端发心跳、前端用 fetch 流+自研重连</strong>。下次再遇到"到一半卡住"，先看 Nginx 日志的 499（客户端主动断开），八成就是它。</p>
+<p>不是 SSE 不行，是<strong>裸奔的 SSE 不行</strong>。配齐心跳、超时、重连、断点续传四件套，SSE 完全能打。协议没有银弹，只有"是否配齐了配套工程"。</p>
+<h2>长连接的可观测性：给 SSE 接上监控</h2>
+<p>修完 bug 别急着走——这类"幽灵问题"最大的教训是<strong>事前不可观测</strong>。给 SSE 接四个指标，下次它再闹，你第一分钟就知道：</p>
+<ol>
+<li><strong>499 率</strong>：Nginx 日志里 499 占比突增 = 有东西在掐连接，设告警线；</li>
+<li><strong>重连率</strong>：前端每次触发重连打一个点。正常情况接近 0，超过 1% 就去查链路；</li>
+<li><strong>心跳存活率</strong>：服务端发了多少心跳、客户端收到了多少——两者对不上，说明中间有代理在"吃"包；</li>
+<li><strong>TTFB 分布</strong>：首 token 时间的 P99。TTFB 正常但中途断流，指向"思考窗口超时"；TTFB 本身就长，指向 prefill/排队问题。</li>
+</ol>
+<p>这四个指标接进 Prometheus + Grafana，配上告警，"到一半卡住"就从灵异事件变成了普通工单。<strong>所有偶发 bug 的终极解法，都是把它变成可观测的</strong>。</p>
+<h2>诊断手册：下次 10 分钟定位</h2>
+<ol>
+<li><strong>先看 Nginx 日志的 499</strong>：499 = 客户端主动断开连接。SSE 场景下大量 499，八成是某层超时掐了连接；</li>
+<li><strong>curl 绕过代理直连后端</strong>：<code class="notranslate">curl --no-buffer</code> 直接打后端流式接口——直连正常、过代理卡住，凶手在代理层；</li>
+<li><strong>抓包看心跳</strong>：看看 15 秒的心跳包在哪一跳断了，断点一目了然；</li>
+<li><strong>查 <code class="notranslate">proxy_read_timeout</code> 和 buffering</strong>：这两个配置项，90% 的 SSE 事故里至少有一个是错的。</li>
+</ol>
+<hr>
+<p>回到周二下午 3 点的客服群。如果当时有人先看一眼 Nginx 日志里的 499，而不是先去加重试、再去查前端渲染，这场持续了 6 小时的"灵异事件"，10 分钟就能结案。</p>
+<p>SSE 断流的本质，是<strong>长连接在多层代理面前的脆弱性</strong>——这不是你的代码的错，是协议的原罪。但知道了原罪，就该按原罪的方式修：Nginx 关缓冲调超时、服务端发心跳、前端用 fetch 流加自研重连。下次再遇到"到一半卡住"，别问模型，先问 Nginx。</p>
 <p>##{"timestamp":1748491200}</p></div>
   <div class="article-tail"></div>
   
