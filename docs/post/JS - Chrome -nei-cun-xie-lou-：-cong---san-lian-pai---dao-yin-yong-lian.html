@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
+
+<meta name="description" content="> 上周三下午，客服群转来一条用户录屏：后台管理系统开半小时开始掉帧，一小时后标签页直接卡死，只能关掉重开。">
+<meta property="og:title" content="JS - Chrome 内存泄漏：从"三连拍"到引用链">
+<meta property="og:description" content="> 上周三下午，客服群转来一条用户录屏：后台管理系统开半小时开始掉帧，一小时后标签页直接卡死，只能关掉重开。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://zhaojjjjjj.github.io/post/JS%20-%20Chrome%20-nei-cun-xie-lou-%EF%BC%9A-cong---san-lian-pai---dao-yin-yong-lian.html">
+<meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
+<title>JS - Chrome 内存泄漏：从"三连拍"到引用链</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet">
+
+
+<style>
+:root{
+  --bg:#ffffff; --ink:#17171c; --ink2:#4c4c56; --muted:#8f8f99;
+  --line:#ececf1; --soft:#f7f7f9;
+  --accent:#7c3aed; --accent-soft:#f4f0fe; --accent-ink:#5b21b6;
+  --radius:14px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Inter,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono","PingFang SC","Microsoft YaHei",monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap{max-width:780px;margin:0 auto;padding:0 24px}
+a{color:var(--accent-ink);text-decoration:none}
+/* header */
+.site-head{border-bottom:1px solid var(--line);background:rgba(255,255,255,.9);backdrop-filter:saturate(1.4) blur(8px);position:sticky;top:0;z-index:50}
+.head-in{display:flex;align-items:center;height:64px}
+.brand{display:flex;align-items:center;gap:12px;color:var(--ink)}
+.brand .avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;display:block}
+.brand .name{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.nav{margin-left:auto;display:flex;align-items:center;gap:4px}
+.nav a{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:10px;color:var(--ink2);font-size:14px;font-weight:500}
+.nav a:hover{background:var(--soft);color:var(--ink)}
+.nav a svg{width:18px;height:18px;display:block}
+/* footer */
+.site-foot{border-top:1px solid var(--line);margin-top:72px}
+.foot-in{display:flex;align-items:center;justify-content:center;gap:10px;height:72px;font-size:13px;color:var(--muted)}
+.foot-in a{color:var(--muted)}
+.foot-in a:hover{color:var(--accent-ink)}
+/* chips */
+.chip{display:inline-block;font-size:12px;line-height:1;padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);font-weight:600;white-space:nowrap;vertical-align:2px}
+/* prose : markdown body */
+.prose{font-size:16.5px;line-height:1.9;color:var(--ink);overflow-wrap:break-word}
+.prose h1,.prose h2,.prose h3,.prose h4{line-height:1.4;letter-spacing:-.015em;margin:2.1em 0 .8em;font-weight:750}
+.prose h1{font-size:27px}.prose h2{font-size:23px}.prose h3{font-size:19px}.prose h4{font-size:17px}
+.prose h2{padding-bottom:.35em;border-bottom:1px solid var(--line)}
+.prose p{margin:1.05em 0}
+.prose a{color:var(--accent-ink);border-bottom:1px solid #d9c9f7;transition:border-color .15s}
+.prose a:hover{border-bottom-color:var(--accent)}
+.prose strong{font-weight:700}
+.prose ul,.prose ol{padding-left:1.5em;margin:1.05em 0}
+.prose li{margin:.4em 0}
+.prose li::marker{color:var(--accent)}
+.prose blockquote{margin:1.4em 0;padding:.7em 1.1em;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;color:var(--ink2)}
+.prose blockquote p{margin:.5em 0}
+.prose code{font-family:var(--mono);font-size:.85em;background:var(--accent-soft);color:var(--accent-ink);padding:2px 7px;border-radius:7px}
+.prose pre{background:#f6f6f9;border:1px solid var(--line);border-radius:var(--radius);padding:18px;overflow:auto;position:relative;margin:1.4em 0}
+.prose pre code{background:transparent;color:var(--ink);padding:0;border-radius:0;font-size:13.5px;line-height:1.75}
+.prose img{max-width:100%;border-radius:12px;border:1px solid var(--line);display:block;margin:1.4em auto}
+.prose table{border-collapse:collapse;width:100%;margin:1.4em 0;font-size:14.5px;display:block;overflow-x:auto}
+.prose th,.prose td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+.prose th{background:var(--soft);font-weight:650}
+.prose hr{border:none;border-top:1px solid var(--line);margin:2.4em 0}
+.prose .g-emoji{font-size:1.15em}
+.copybtn{position:absolute;top:10px;right:10px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.copybtn:hover{color:var(--accent-ink);border-color:#d9c9f7}
+@media (max-width:640px){
+  body{font-size:15px}
+  .wrap{padding:0 18px}
+  .prose{font-size:15.5px}
+  .prose pre{padding:14px}
+}
+</style>
+
+<style>
+.article-head{padding:56px 0 8px}
+.article-head .tags{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
+.article-title{font-size:33px;line-height:1.35;letter-spacing:-.02em;font-weight:780;margin:0 0 16px;overflow-wrap:break-word}
+.article-meta{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted)}
+.article-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--muted)}
+.article-body{margin-top:28px;padding-top:8px;border-top:1px solid var(--line)}
+.article-tail{margin-top:10px;font-size:13px;color:var(--muted);text-align:right}
+.back-row{margin:44px 0 8px}
+.back-row a{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink2);padding:10px 18px;border:1px solid var(--line);border-radius:999px}
+.back-row a:hover{border-color:var(--accent);color:var(--accent-ink)}
+.back-row svg{width:15px;height:15px}
+#cmButton{display:block;width:100%;margin-top:56px;padding:15px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:var(--font)}
+#cmButton:hover{border-color:var(--accent);color:var(--accent-ink)}
+#cmButton:disabled{opacity:.6;cursor:default}
+#comments{margin-top:24px}
+.utterances{max-width:100%}
+@media (max-width:640px){
+  .article-head{padding:40px 0 4px}
+  .article-title{font-size:25px}
+}
+</style>
+
+
+</head>
+<body>
+<header class="site-head"><div class="wrap head-in">
+  <a class="brand" href="https://zhaojjjjjj.github.io"><img class="avatar" src="https://avatars.githubusercontent.com/u/102017381?v=4" alt="avatar"><span class="name">zhaojjjjjj</span></a>
+  <nav class="nav">
+<a href="https://zhaojjjjjj.github.io" title="首页" aria-label="首页">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8 8 2.5 13.5 8"/><path d="M4.5 6.8V13.5h7V6.8"/></svg>
+</a>
+
+<a href="https://github.com/Zhaojjjjjj/zhaojjjjjj.github.io/issues/100" target="_blank" title="Issue" aria-label="Issue">
+  <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.36c-2.24.49-2.71-1.08-2.71-1.08-.37-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.81.06 1.24.83 1.24.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.96 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+</a>
+
+</nav>
+</div></header>
+<main class="wrap">
+<article>
+  <header class="article-head">
+    <div class="tags" id="article-tags"></div>
+    <h1 class="article-title">JS - Chrome 内存泄漏：从"三连拍"到引用链</h1>
+    <div class="article-meta" id="article-meta" data-comments=""></div>
+  </header>
+  <div class="article-body prose"><blockquote>
+<p>上周三下午，客服群转来一条用户录屏：后台管理系统开半小时开始掉帧，一小时后标签页直接卡死，只能关掉重开。"刷新就好"——最气人的一句话：说明 bug 100% 可复现，又 100% 藏在看不见的地方。监控一切正常：CPU 不高，接口不慢，JS 报错为零。打开 Chrome 任务管理器盯内存列：100MB、300MB、600MB……<strong>只涨不跌</strong>。得，内存泄漏，前端最经典的慢性病，确诊了。</p>
+</blockquote>
+<h1>Chrome 内存泄漏：从"三连拍"到引用链</h1>
+<h1>一、先确认：三条证据，立案再动手</h1>
+<p>"感觉卡"不等于泄漏。动手前拿证据，免得在错误方向浪费两天。</p>
+<p><strong>证据一：Chrome 任务管理器。</strong> Shift+Esc，按内存排序，做一轮常规操作（切页面、开弹窗）。正常页面内存涨落，泄漏的只涨不跌。</p>
+<p><strong>证据二：JS 堆大小。</strong> 控制台跑：</p>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 每 5 秒打印堆内存（MB）</span>
+<span class="pl-en">setInterval</span><span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-kos">{</span>
+  <span class="pl-k">const</span> <span class="pl-s1">mb</span> <span class="pl-c1">=</span> <span class="pl-s1">performance</span><span class="pl-kos">.</span><span class="pl-c1">memory</span><span class="pl-kos">.</span><span class="pl-c1">usedJSHeapSize</span> <span class="pl-c1">/</span> <span class="pl-c1">1048576</span><span class="pl-kos">;</span>
+  <span class="pl-smi">console</span><span class="pl-kos">.</span><span class="pl-en">log</span><span class="pl-kos">(</span><span class="pl-s1">mb</span><span class="pl-kos">.</span><span class="pl-en">toFixed</span><span class="pl-kos">(</span><span class="pl-c1">1</span><span class="pl-kos">)</span> <span class="pl-c1">+</span> <span class="pl-s">' MB'</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-c1">5000</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<p>操作一轮回来，基线每次抬高一截，就是泄漏。</p>
+<p><strong>证据三：分配时间线。</strong> DevTools → Memory → "Allocation instrumentation on timeline"，记录、操作、停止。<strong>蓝色柱子只涨不跌 = 泄漏实锤</strong>，还能看到"哪次操作"导致上涨，把泄漏和具体动作对应起来。</p>
+<p>中两条就立案。记住顺序：<strong>先确认，再动手</strong>。</p>
+<h1>二、找元凶：Heap Snapshot 三连拍，和 Retainers 的读法</h1>
+<p>确认之后，"三连拍"：</p>
+<pre class="notranslate"><code class="notranslate">1. 切到页面 A，拍 Snapshot 1
+2. 切到页面 B，再切回 A，拍 Snapshot 2
+3. 切到页面 B，再切回 A，拍 Snapshot 3
+4. Snapshot 3 切 "Comparison" 视图，对比 Snapshot 1
+</code></pre>
+<p>看 <code class="notranslate"># New</code> 列：<strong>不为零的就是泄漏</strong>——页面都卸载了，对象该被回收完，有残留说明有东西抓着不放。为什么拍三张不是两张？第一次切换可能含"缓存预热"的正常增长，三张排除偶然性；Snapshot 3 比 2 还多一截，就是每次切换都在漏。拍之前手动点几次 GC 按钮，把能回收的先回收，剩下的才是真泄漏。</p>
+<p>找到泄漏对象，点开看 <strong>Retainers</strong> 面板——"谁引用了它"。GC 回收不了一个对象，永远因为有引用链连着。从下往上读，找到离 GC Root 最近的"那只手"，那就是真凶。读链诀窍：<strong>跳过系统内部引用</strong>（<code class="notranslate">system / Map</code> 之类），找你自己代码里的名字——某个组件、闭包、数组。真凶常伪装成叫 <code class="notranslate">cache</code> 的数组、叫 <code class="notranslate">handlers</code> 的对象、三个月前写的"临时"全局变量。</p>
+<h1>三、三大惯犯，和一个 echarts 的 20MB</h1>
+<p>十年了，凶手没换过，一直是这三个：</p>
+<p><strong>惯犯一：没 off 的事件监听。</strong> 组件卸载，监听还活在 window 上。重灾区是<strong>全局事件总线</strong>：<code class="notranslate">mitt</code>、<code class="notranslate">eventBus</code> 的 <code class="notranslate">on</code> 注册了没 <code class="notranslate">off</code>。SPA 切来切去，每进一次页面注册一批从不注销——SPA 泄漏第一元凶，顺着 Retainers 十次有八次终点是 eventBus。</p>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-en">useEffect</span><span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-kos">{</span>
+  <span class="pl-smi">window</span><span class="pl-kos">.</span><span class="pl-en">addEventListener</span><span class="pl-kos">(</span><span class="pl-s">'resize'</span><span class="pl-kos">,</span> <span class="pl-s1">handleResize</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+  <span class="pl-k">return</span> <span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-smi">window</span><span class="pl-kos">.</span><span class="pl-en">removeEventListener</span><span class="pl-kos">(</span><span class="pl-s">'resize'</span><span class="pl-kos">,</span> <span class="pl-s1">handleResize</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-c">// 清理和注册写在同一处，Vue 在 onUnmounted 里清</span></pre></div>
+<p><strong>惯犯二：没 clear 的定时器。</strong> 问题不只是"多跑几秒"，回调闭包抓着整个组件状态——state、props、大对象一个跑不掉。<strong>一个没清的定时器，等于把整个组件钉在内存里。</strong></p>
+<p><strong>惯犯三：闭包抓着 DOM。</strong> 在 Heap Snapshot 搜 <strong>Detached</strong>——detached DOM 树是铁证。节点本身不大，但连着整个子树、样式、监听，一个 detached 根能拖住几 MB。</p>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 定罪现场：图表组件卸载没调 dispose</span>
+<span class="pl-en">useEffect</span><span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-kos">{</span>
+  <span class="pl-k">const</span> <span class="pl-s1">chart</span> <span class="pl-c1">=</span> <span class="pl-s1">echarts</span><span class="pl-kos">.</span><span class="pl-en">init</span><span class="pl-kos">(</span><span class="pl-s1">ref</span><span class="pl-kos">.</span><span class="pl-c1">current</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+  <span class="pl-s1">chart</span><span class="pl-kos">.</span><span class="pl-en">setOption</span><span class="pl-kos">(</span><span class="pl-s1">option</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+  <span class="pl-k">return</span> <span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">=&gt;</span> <span class="pl-s1">chart</span><span class="pl-kos">.</span><span class="pl-en">dispose</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>  <span class="pl-c">// 第三方库的销毁必须写</span>
+<span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<p>回到开头事故：三连拍显示每次切回数据大屏多出一批 <code class="notranslate">Detached HTMLCanvasElement</code> 和 echarts 实例，约 20MB，Retainers 终点是没调 <code class="notranslate">chart.dispose()</code> 的图表组件。教训很具体：<strong>第三方库的"销毁"必须和"初始化"写在同一处</strong>——<code class="notranslate">init</code> 过的图表、<code class="notranslate">new</code> 过的编辑器、<code class="notranslate">create</code> 过的播放器，不会自己消失。封装成 hook 让初始化和销毁锁死，靠代码结构不靠记性。</p>
+<p>Vue 3 另有特有坑：<code class="notranslate">watchEffect</code> 返回的 stop 不调（组件卸载不会自动停）；全局 <code class="notranslate">reactive</code> store 里缓存页面级数据（越攒越多）；<code class="notranslate">v-show</code> 切换的重型弹窗（display:none 而已，20 次等于 20 个实例全活着，<strong>重型弹窗用 <code class="notranslate">v-if</code></strong>）。</p>
+<h1>四、慢泄漏：最难查的那一种</h1>
+<p>上面是"快泄漏"——切几次页面几十 MB 没了。真正难的是<strong>慢泄漏</strong>：每次只漏几十 KB，三连拍看不出异常，但页面开 8 小时从 200MB 爬到 1.5GB。换打法：</p>
+<p><strong>拉长时间线</strong>：写脚本循环切换 30 次再对比，单次泄漏小乘以 30 就现形；或 Performance Monitor 录 10 分钟看基线是否缓慢抬头。</p>
+<p><strong>查"只增不减"的集合</strong>：慢泄漏凶手十有八九是只 <code class="notranslate">push</code> 从不清理的数组/Map——埋点队列、日志缓存、撤销栈、WebSocket 消息队列。按 Shallow Size 排序找"大得不合理"的数组，点开看内容：</p>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 典型的慢泄漏：只进不出</span>
+<span class="pl-k">const</span> <span class="pl-s1">eventLog</span> <span class="pl-c1">=</span> <span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">;</span>
+<span class="pl-k">function</span> <span class="pl-en">track</span><span class="pl-kos">(</span><span class="pl-s1">event</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+  <span class="pl-s1">eventLog</span><span class="pl-kos">.</span><span class="pl-en">push</span><span class="pl-kos">(</span><span class="pl-kos">{</span> ...<span class="pl-s1">event</span><span class="pl-kos">,</span> <span class="pl-c1">time</span>: <span class="pl-v">Date</span><span class="pl-kos">.</span><span class="pl-en">now</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+  <span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">eventLog</span><span class="pl-kos">.</span><span class="pl-c1">length</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">1000</span><span class="pl-kos">)</span> <span class="pl-s1">eventLog</span><span class="pl-kos">.</span><span class="pl-en">splice</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">eventLog</span><span class="pl-kos">.</span><span class="pl-c1">length</span> <span class="pl-c1">-</span> <span class="pl-c1">1000</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<p><strong>警惕"看起来无害"的累积</strong>：开着 DevTools 时 console 打印的大对象会被留着引用（拍 Snapshot 前先清 console）；没关的 Performance 观测；越积越多的 store 历史快照。查慢泄漏就问一句：<strong>这个页面开 8 小时，哪些数据结构会一直变大？</strong></p>
+<h1>结语</h1>
+<p>排查公式一句：<strong>Timeline 确认 → Snapshot 对比找 #New → Retainers 找引用链</strong>。预防更短，四个字：<strong>谁创建，谁清理</strong>——useEffect 的 return、onUnmounted、chart.dispose()，是代码和 GC 之间的合同，签了就得履约。</p>
+<p>进阶动作：把"三连拍"写成 Puppeteer 脚本（切 10 次页面对比堆基线，涨超 5MB 拦下发布）接进 CI——排查公式给人用，脚本给流程用；ESLint 把 <code class="notranslate">react-hooks/exhaustive-deps</code> 开到 error；关键页面上线前跑一遍三连拍，当成和回归测试一样自然的发布检查项。</p>
+<p>开头那条录屏，最后定罪的凶手有点好笑：全局 eventBus 上没 off 的监听——每次进页面注册一次从不注销，开半小时攒上千个，回调还抓着整个页面状态。修完，内存曲线终于从"只涨不跌"变成正常涨落。<strong>泄漏和 bug 一样，越早进测试环境发现，修复成本越低</strong>——等用户录屏发到客服群，成本已翻十倍。</p>
+<p>##{"timestamp":1774756800}</p></div>
+  <div class="article-tail"></div>
+  
+  <button type="button" id="cmButton" onclick="openComments()">评论</button>
+  <div id="comments"></div>
+  
+  <div class="back-row"><a href="https://zhaojjjjjj.github.io">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg>
+    全部文章
+  </a></div>
+</article>
+</main>
+<footer class="site-foot"><div class="wrap"><div class="foot-in">
+  <span>© <span id="cy"></span>&nbsp;<a href="https://zhaojjjjjj.github.io">zhaojjjjjj</a></span>
+  <span class="sep">·</span>
+  <span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank" rel="noopener">Gmeek</a></span>
+</div>
+<script>document.getElementById('cy').textContent=new Date().getFullYear();</script></div></footer>
+<script>var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};var utterancesLoad=0;</script>
+
+<script>
+(function(){
+  // Remove Gmeek backdate config line rendered as a paragraph: ##{"timestamp":...}
+  try{
+    var mb=document.querySelector('.article-body');
+    if(mb){var ps=mb.querySelectorAll('p');
+      for(var i=0;i<ps.length;i++){
+        if(/^##\{"timestamp":\d+/.test(ps[i].textContent.trim())){ps[i].remove();}
+      }}
+  }catch(e){}
+  var meta=document.getElementById('article-meta');if(!meta)return;
+  var file=decodeURIComponent(location.pathname.split('/').pop());
+  fetch('/postList.json').then(function(r){return r.json();}).then(function(d){
+    for(var k in d){var p=d[k];if(!p||!p.postUrl)continue;
+      if(decodeURIComponent(p.postUrl).split('/').pop()===file){
+        var tags=document.getElementById('article-tags');
+        if(tags&&p.labels&&p.labels.length){tags.innerHTML=p.labels.map(function(l){return '<span class="chip">'+l+'</span>';}).join('');}
+        var parts=['<span>'+p.createdDate+'</span>'];
+        var c=meta.getAttribute('data-comments');
+        if(c){parts.push('<span class="dot"></span><span>'+c+' 条评论</span>');}
+        meta.innerHTML=parts.join('');
+        break;
+      }
+    }
+  }).catch(function(){});
+})();
+
+function openComments(){
+  var btn=document.getElementById('cmButton');
+  btn.disabled=true; btn.textContent='loading…';
+  var s=document.createElement('script');
+  s.src='https://utteranc.es/client.js';
+  s.setAttribute('repo','Zhaojjjjjj/zhaojjjjjj.github.io');
+  s.setAttribute('issue-term','title');
+  s.setAttribute('theme','github-light');
+  s.setAttribute('crossorigin','anonymous');
+  s.async=true;
+  document.getElementById('comments').appendChild(s);
+  var iv=setInterval(function(){
+    var u=document.getElementsByClassName('utterances');
+    if(u.length===1&&u[0].style.height!==''){utterancesLoad=1;clearInterval(iv);btn.style.display='none';}
+  },200);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.prose pre').forEach(function(pre){
+    if(pre.querySelector('.copybtn'))return;
+    var b=document.createElement('button');
+    b.className='copybtn'; b.type='button'; b.textContent='复制';
+    b.addEventListener('click',function(){
+      var t=pre.innerText;
+      function done(){b.textContent='已复制';setTimeout(function(){b.textContent='复制';},1600);}
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,done);}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();}
+    });
+    pre.appendChild(b);
+  });
+});
+</script>
+
+
+</body>
+</html>
