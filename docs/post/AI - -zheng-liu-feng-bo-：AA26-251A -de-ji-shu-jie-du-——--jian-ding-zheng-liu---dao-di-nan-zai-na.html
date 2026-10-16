@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%20-zheng-liu-feng-bo-%EF%BC%9AAA26-251A%20-de-ji-shu-jie-du-%E2%80%94%E2%80%94--jian-ding-zheng-liu---dao-di-nan-zai-na.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
 <title>AI - 蒸馏风波：AA26-251A 的技术解读——"鉴定蒸馏"到底难在哪</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet">
+
 
 
 <style>
@@ -134,11 +134,12 @@ a{color:var(--accent-ink);text-decoration:none}
 <pre class="notranslate"><code class="notranslate">"自 2024 年底起，系统性、工业级蒸馏 Claude、ChatGPT、Gemini、Grok"
 </code></pre>
 <p>翻译成技术语言，指控的是<strong>黑盒蒸馏</strong>：</p>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 被指控的流程（示意）</span>
-<span class="pl-k">for</span> <span class="pl-s1">prompt</span> <span class="pl-c1">in</span> <span class="pl-s1">massive_prompt_set</span>:          <span class="pl-c"># 数百万个 prompt，覆盖全任务类型</span>
-    <span class="pl-s1">response</span> <span class="pl-c1">=</span> <span class="pl-en">claude_api</span>(<span class="pl-s1">prompt</span>)          <span class="pl-c"># 调美国模型的 API</span>
-    <span class="pl-s1">dataset</span>.<span class="pl-c1">append</span>((<span class="pl-s1">prompt</span>, <span class="pl-s1">response</span>))     <span class="pl-c"># 收集"问题→答案"对</span>
-<span class="pl-s1">student</span>.<span class="pl-c1">train</span>(<span class="pl-s1">dataset</span>)                     <span class="pl-c"># 在自己的模型上训练</span></pre></div>
+<pre lang="python" class="notranslate"><code class="notranslate"># 被指控的流程（示意）
+for prompt in massive_prompt_set:          # 数百万个 prompt，覆盖全任务类型
+    response = claude_api(prompt)          # 调美国模型的 API
+    dataset.append((prompt, response))     # 收集"问题→答案"对
+student.train(dataset)                     # 在自己的模型上训练
+</code></pre>
 <p>注意：这和"用 API 做产品"是同一个动作，区别只在<strong>意图和规模</strong>——而意图，恰恰是技术鉴定最难的部分。</p>
 <h1>一、能检测的三种信号</h1>
 <p>Anthropic 的配套报告提到"约 2 亿次交流"，阿里规模最大。技术上，鉴定蒸馏靠三种信号，强度递减：</p>
@@ -149,11 +150,12 @@ a{color:var(--accent-ink);text-decoration:none}
 <p>这是行为分析，不是证据。<strong>调用量大可能是正常业务</strong>（比如一个 AI 客服公司）——行为只能"起疑"，不能"定罪"。</p>
 <p><strong>2. 输出指纹（中等）</strong></p>
 <p>每个模型有独特的"文风"：特定 token 的偏好分布、句式习惯、甚至标点模式。学生在老师数据上训练，会<strong>继承这种分布</strong>——</p>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 伪代码：指纹检测</span>
-<span class="pl-s1">teacher_dist</span> <span class="pl-c1">=</span> <span class="pl-en">measure_token_distribution</span>(<span class="pl-s1">claude_outputs</span>)    <span class="pl-c"># 老师的"文风向量"</span>
-<span class="pl-s1">student_dist</span> <span class="pl-c1">=</span> <span class="pl-en">measure_token_distribution</span>(<span class="pl-s1">suspect_outputs</span>)   <span class="pl-c"># 嫌疑模型的"文风向量"</span>
-<span class="pl-s1">similarity</span> <span class="pl-c1">=</span> <span class="pl-en">cosine</span>(<span class="pl-s1">teacher_dist</span>, <span class="pl-s1">student_dist</span>)
-<span class="pl-c"># similarity &gt; 0.95，且排除了"同训练数据"的解释 → 高度可疑</span></pre></div>
+<pre lang="python" class="notranslate"><code class="notranslate"># 伪代码：指纹检测
+teacher_dist = measure_token_distribution(claude_outputs)    # 老师的"文风向量"
+student_dist = measure_token_distribution(suspect_outputs)   # 嫌疑模型的"文风向量"
+similarity = cosine(teacher_dist, student_dist)
+# similarity &gt; 0.95，且排除了"同训练数据"的解释 → 高度可疑
+</code></pre>
 <p>但有个根本困难：<strong>同分布不等于抄袭</strong>。如果两家都用 Common Crawl 训，文风自然接近——"像"可能是"同源"，不一定是"师生"。</p>
 <p><strong>3. 错误继承（最强）</strong></p>
 <p>老师犯过的<strong>独特错误</strong>，学生也犯，且错误模式一致：</p>

@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/AI%20-%20-yi-%E3%80%81RoPE%20-wai-tui-%EF%BC%9A-wei-zhi---hu---le.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
 <title>AI - 一、RoPE 外推：位置"糊"了</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet">
+
 
 
 <style>
@@ -138,9 +138,10 @@ a{color:var(--accent-ink);text-decoration:none}
 <p><strong>位置"糊"了，模型就分不清"谁在前谁在后"</strong>——长文档的顺序信息直接丢失。这是"有损"的第一来源。</p>
 <p>GLM-5.2 的解法是 YaRN 位置插值：<strong>不是外推，是重标刻度</strong>。把 RoPE 的旋转频率重新映射，让 1M 个位置每个都有区分度。关键区别：外推是"硬撑"，插值是"重训"——<strong>位置编码本身要为长上下文重新学习</strong>，不能指望训练时的尺子直接能用。</p>
 <h1>二、注意力稀释：softmax 的分母太大了</h1>
-<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># 1M 个 token 的 softmax</span>
-<span class="pl-s1">attn_weights</span> <span class="pl-c1">=</span> <span class="pl-en">softmax</span>(<span class="pl-s1">scores</span>)  <span class="pl-c"># 分母是 100 万项的和</span>
-<span class="pl-c"># 每个 token 分到的权重 ≈ 1/1M ≈ 0</span></pre></div>
+<pre lang="python" class="notranslate"><code class="notranslate"># 1M 个 token 的 softmax
+attn_weights = softmax(scores)  # 分母是 100 万项的和
+# 每个 token 分到的权重 ≈ 1/1M ≈ 0
+</code></pre>
 <p><strong>注意力被摊薄到接近于零</strong>。模型"看"了 1M 个 token，但每个都没看清——就像把一滴墨水分到一吨水里。</p>
 <p>解法是<strong>注意力下沉（Attention Sink）</strong>：保留开头的几个 token 作为"锚点"，让注意力有地方"落脚"。这个发现来自 2023 年的论文（StreamingLLM），2026 年成了标配。原理很反直觉：<strong>softmax 需要一些"垃圾桶"token 来吸收多余的注意力质量</strong>，否则所有权重都被摊平。有了 sink，重要的 token 才能凸显出来。</p>
 <h1>三、训练没见过：分布外的 1M</h1>
