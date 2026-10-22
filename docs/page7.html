@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <link rel="icon" href="https://avatars.githubusercontent.com/u/102017381?v=4">
+<script>(function(){try{var t=localStorage.getItem('theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
 
 <meta name="description" content="个人技术博客">
 <meta property="og:title" content="zhaojjjjjj">
@@ -16,90 +17,137 @@
 
 <style>
 :root{
-  --bg:#ffffff; --ink:#17171c; --ink2:#4c4c56; --muted:#8f8f99;
-  --line:#ececf1; --soft:#f7f7f9;
-  --accent:#7c3aed; --accent-soft:#f4f0fe; --accent-ink:#5b21b6;
+  --bg:#ffffff; --ink:#131318; --ink2:#45454f; --muted:#8a8a95;
+  --line:#e9e9ee; --line2:#dcdce4; --soft:#f7f7f9; --headbg:rgba(255,255,255,.86);
+  --accent:#7c3aed; --accent-soft:#f3effe; --accent-ink:#5b21b6; --accent-line:#ddd0fa;
+  --codebg:#f7f7f9; --codeink:#26262e;
   --radius:14px;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Inter,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono","PingFang SC","Microsoft YaHei",monospace;
 }
+[data-theme="dark"]{
+  --bg:#0f0f13; --ink:#f1f1f5; --ink2:#b9b9c4; --muted:#82828e;
+  --line:#23232b; --line2:#32323d; --soft:#17171d; --headbg:rgba(15,15,19,.84);
+  --accent:#a78bfa; --accent-soft:#221839; --accent-ink:#c9b4fc; --accent-line:#3d2d63;
+  --codebg:#17171d; --codeink:#e8e8ee;
+}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-.wrap{max-width:780px;margin:0 auto;padding:0 24px}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;transition:background .25s ease,color .25s ease}
+::selection{background:var(--accent);color:#fff}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+.read{max-width:732px;margin:0 auto}
 a{color:var(--accent-ink);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 /* header */
-.site-head{border-bottom:1px solid var(--line);background:rgba(255,255,255,.9);backdrop-filter:saturate(1.4) blur(8px);position:sticky;top:0;z-index:50}
-.head-in{display:flex;align-items:center;height:64px}
-.brand{display:flex;align-items:center;gap:12px;color:var(--ink)}
-.brand .avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;display:block}
-.brand .name{font-size:17px;font-weight:700;letter-spacing:-.01em}
-.nav{margin-left:auto;display:flex;align-items:center;gap:4px}
-.nav a{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:10px;color:var(--ink2);font-size:14px;font-weight:500}
-.nav a:hover{background:var(--soft);color:var(--ink)}
-.nav a svg{width:18px;height:18px;display:block}
+.site-head{border-bottom:1px solid var(--line);background:var(--headbg);backdrop-filter:saturate(1.5) blur(10px);-webkit-backdrop-filter:saturate(1.5) blur(10px);position:sticky;top:0;z-index:60}
+.head-in{display:flex;align-items:center;height:62px;gap:8px}
+.brand{display:flex;align-items:center;gap:11px;color:var(--ink);flex:none}
+.brand .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;border:1px solid var(--line)}
+.brand .name{font-size:16.5px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
+.brand .name i{font-style:normal;color:var(--accent)}
+.nav{margin-left:auto;display:flex;align-items:center;gap:2px}
+.nav a,.theme-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:38px;height:38px;padding:0 10px;border-radius:10px;color:var(--ink2);font-size:14px;font-weight:550;background:none;border:none;cursor:pointer;font-family:var(--font)}
+.nav a:hover,.theme-btn:hover{background:var(--soft);color:var(--ink)}
+.nav a svg,.theme-btn svg{width:18px;height:18px;display:block}
+.theme-btn .sun{display:none}
+[data-theme="dark"] .theme-btn .sun{display:block}
+[data-theme="dark"] .theme-btn .moon{display:none}
 /* footer */
-.site-foot{border-top:1px solid var(--line);margin-top:72px}
-.foot-in{display:flex;align-items:center;justify-content:center;gap:10px;height:72px;font-size:13px;color:var(--muted)}
+.site-foot{border-top:1px solid var(--line);margin-top:88px}
+.foot-in{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:76px;padding-top:14px;padding-bottom:14px;font-size:13px;color:var(--muted);flex-wrap:wrap}
 .foot-in a{color:var(--muted)}
 .foot-in a:hover{color:var(--accent-ink)}
-/* chips */
-.chip{display:inline-block;font-size:12px;line-height:1;padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);font-weight:600;white-space:nowrap;vertical-align:2px}
+.foot-links{display:flex;gap:20px}
+.foot-links a{font-weight:550}
+/* chips : quiet outline labels */
+.chip{display:inline-block;font-size:11.5px;line-height:1;padding:5px 10px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2);font-weight:600;letter-spacing:.02em;white-space:nowrap;background:transparent}
+a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--accent-ink)}
+/* shared archive list rows */
+.rowlist{border-top:1px solid var(--line)}
+.post-row{display:grid;grid-template-columns:104px minmax(0,1fr) auto 22px;align-items:baseline;gap:20px;padding:19px 10px;border-bottom:1px solid var(--line);color:var(--ink)}
+.post-row .date{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap;letter-spacing:-.01em}
+.post-row .ttl{font-size:16.5px;font-weight:600;letter-spacing:-.015em;line-height:1.5;overflow-wrap:break-word}
+.post-row:hover .ttl{color:var(--accent-ink)}
+.post-row .tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.post-row .arr{color:var(--muted);font-size:15px;transition:transform .18s ease,color .18s ease;text-align:right}
+.post-row:hover .arr{transform:translateX(3px);color:var(--accent)}
+.post-row:hover{background:var(--soft)}
 /* prose : markdown body */
-.prose{font-size:16.5px;line-height:1.9;color:var(--ink);overflow-wrap:break-word}
-.prose h1,.prose h2,.prose h3,.prose h4{line-height:1.4;letter-spacing:-.015em;margin:2.1em 0 .8em;font-weight:750}
-.prose h1{font-size:27px}.prose h2{font-size:23px}.prose h3{font-size:19px}.prose h4{font-size:17px}
-.prose h2{padding-bottom:.35em;border-bottom:1px solid var(--line)}
-.prose p{margin:1.05em 0}
-.prose a{color:var(--accent-ink);border-bottom:1px solid #d9c9f7;transition:border-color .15s}
+.prose{font-size:16.5px;line-height:1.92;color:var(--ink);overflow-wrap:break-word}
+.prose h1,.prose h2,.prose h3,.prose h4{line-height:1.42;letter-spacing:-.018em;margin:2.2em 0 .85em;font-weight:760}
+.prose h1{font-size:26px}.prose h2{font-size:22.5px}.prose h3{font-size:18.5px}.prose h4{font-size:16.5px}
+.prose h2{padding-bottom:.4em;border-bottom:1px solid var(--line)}
+.prose p{margin:1.08em 0}
+.prose a{color:var(--accent-ink);border-bottom:1px solid var(--accent-line);transition:border-color .15s}
 .prose a:hover{border-bottom-color:var(--accent)}
 .prose strong{font-weight:700}
-.prose ul,.prose ol{padding-left:1.5em;margin:1.05em 0}
-.prose li{margin:.4em 0}
-.prose li::marker{color:var(--accent)}
-.prose blockquote{margin:1.4em 0;padding:.7em 1.1em;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;color:var(--ink2)}
+.prose ul,.prose ol{padding-left:1.45em;margin:1.08em 0}
+.prose li{margin:.42em 0}
+.prose li::marker{color:var(--accent);font-weight:600}
+.prose blockquote{margin:1.6em 0;padding:.2em 0 .2em 1.15em;border-left:2px solid var(--accent);color:var(--ink2)}
 .prose blockquote p{margin:.5em 0}
-.prose code{font-family:var(--mono);font-size:.85em;background:var(--accent-soft);color:var(--accent-ink);padding:2px 7px;border-radius:7px}
-.prose pre{background:#f6f6f9;border:1px solid var(--line);border-radius:var(--radius);padding:18px;overflow:auto;position:relative;margin:1.4em 0}
-.prose pre code{background:transparent;color:var(--ink);padding:0;border-radius:0;font-size:13.5px;line-height:1.75}
-.prose img{max-width:100%;border-radius:12px;border:1px solid var(--line);display:block;margin:1.4em auto}
-.prose table{border-collapse:collapse;width:100%;margin:1.4em 0;font-size:14.5px;display:block;overflow-x:auto}
+.prose code{font-family:var(--mono);font-size:.84em;background:var(--accent-soft);color:var(--accent-ink);padding:2px 7px;border-radius:6px}
+.prose pre{background:var(--codebg);border:1px solid var(--line);border-radius:12px;padding:20px;overflow:auto;position:relative;margin:1.5em 0}
+.prose pre code{background:transparent;color:var(--codeink);padding:0;border-radius:0;font-size:13.5px;line-height:1.78}
+.prose img{max-width:100%;border-radius:12px;border:1px solid var(--line);display:block;margin:1.5em auto}
+.prose table{border-collapse:collapse;width:100%;margin:1.5em 0;font-size:14.5px;display:block;overflow-x:auto}
 .prose th,.prose td{border:1px solid var(--line);padding:9px 14px;text-align:left}
 .prose th{background:var(--soft);font-weight:650}
-.prose hr{border:none;border-top:1px solid var(--line);margin:2.4em 0}
+.prose hr{border:none;border-top:1px solid var(--line);margin:2.6em 0}
 .prose .g-emoji{font-size:1.15em}
-.copybtn{position:absolute;top:10px;right:10px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:var(--font);transition:all .15s}
-.copybtn:hover{color:var(--accent-ink);border-color:#d9c9f7}
+.copybtn{position:absolute;top:10px;right:10px;border:1px solid var(--line2);background:var(--bg);color:var(--muted);font-size:12px;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:var(--font);opacity:0;transition:all .15s}
+.prose pre:hover .copybtn{opacity:1}
+.copybtn:hover{color:var(--accent-ink);border-color:var(--accent-line)}
 @media (max-width:640px){
   body{font-size:15px}
-  .wrap{padding:0 18px}
+  .wrap{padding:0 20px}
   .prose{font-size:15.5px}
-  .prose pre{padding:14px}
+  .prose pre{padding:15px}
+  .copybtn{opacity:1}
+  .post-row{grid-template-columns:minmax(0,1fr) 22px;gap:4px 12px;padding:16px 4px}
+  .post-row .date{order:2;grid-column:1}
+  .post-row .ttl{order:1;grid-column:1}
+  .post-row .tags{order:3;grid-column:1;justify-content:flex-start}
+  .post-row .arr{order:1;grid-column:2;grid-row:1}
+  .foot-in{justify-content:center;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{animation:none!important;transition:none!important}
 }
 </style>
 
 <style>
-.hero{padding:60px 0 18px;display:flex;align-items:baseline;justify-content:space-between;gap:16px}
-.eyebrow{font-size:12px;font-weight:700;letter-spacing:.22em;color:var(--accent);margin:0}
-.total{font-size:13px;color:var(--muted);white-space:nowrap}
-.total b{color:var(--ink);font-weight:700}
-.posts{margin:34px 0 8px;border-top:1px solid var(--line)}
-.post-row{display:flex;align-items:baseline;gap:18px;padding:17px 6px;border-bottom:1px solid var(--line);border-radius:8px}
-.post-row:hover{background:var(--soft)}
-.post-row .date{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap;min-width:96px}
-.post-row .ttl{font-size:16.5px;font-weight:600;color:var(--ink);flex:1;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.post-row:hover .ttl{color:var(--accent-ink)}
-.post-row .tags{white-space:nowrap}
-.pager{display:flex;justify-content:space-between;align-items:center;margin:36px 0 8px}
-.pager a,.pager span{font-size:14px;font-weight:600;padding:10px 18px;border:1px solid var(--line);border-radius:999px;color:var(--ink2);background:#fff}
+.hero{padding:76px 0 46px;display:flex;align-items:flex-end;justify-content:space-between;gap:32px}
+.eyebrow{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--accent);margin:0 0 18px}
+.eyebrow::after{content:"";width:44px;height:1px;background:var(--accent);opacity:.55}
+.hero h1{font-size:58px;line-height:1.04;letter-spacing:-.045em;font-weight:820;margin:0}
+.hero h1 i{font-style:normal;color:var(--accent)}
+.total{flex:none;text-align:right;padding-bottom:6px}
+.total b{display:block;font-size:44px;line-height:1;font-weight:800;letter-spacing:-.03em}
+.total span{font-size:12.5px;color:var(--muted);letter-spacing:.14em}
+.year{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.18em;color:var(--muted);padding:30px 10px 4px}
+.year:first-child{padding-top:6px}
+.featured{display:block;padding:30px 10px 28px;border-bottom:1px solid var(--line);color:var(--ink)}
+.featured .f-meta{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-bottom:13px}
+.featured .f-meta .new{font-family:var(--font);font-size:11.5px;font-weight:700;letter-spacing:.12em;color:var(--accent);border:1px solid var(--accent-line);border-radius:999px;padding:3px 9px}
+.featured .f-ttl{display:block;font-size:27px;line-height:1.42;font-weight:760;letter-spacing:-.02em;overflow-wrap:break-word;max-width:860px}
+.featured:hover .f-ttl{color:var(--accent-ink)}
+.featured .f-tags{display:flex;gap:6px;margin-top:15px}
+.featured:hover{background:var(--soft)}
+.post-row{animation:rise .45s ease both;animation-delay:calc(var(--i)*28ms)}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.pager{display:flex;justify-content:space-between;align-items:center;margin:40px 0 8px}
+.pager a,.pager span{font-size:14px;font-weight:600;padding:10px 20px;border:1px solid var(--line2);border-radius:999px;color:var(--ink2);background:var(--bg)}
 .pager a:hover{border-color:var(--accent);color:var(--accent-ink)}
 .pager .disabled{opacity:.35;pointer-events:none}
 @media (max-width:640px){
-  .hero{padding:44px 0 12px}
-  .post-row{flex-wrap:wrap;gap:6px 12px}
-  .post-row .date{min-width:0;order:2}
-  .post-row .ttl{order:1;flex-basis:100%;white-space:normal}
-  .post-row .tags{order:3}
+  .hero{padding:52px 0 34px;align-items:flex-start}
+  .hero h1{font-size:40px}
+  .total b{font-size:32px}
+  .featured{padding:24px 4px 22px}
+  .featured .f-ttl{font-size:21.5px}
 }
 </style>
 
@@ -107,7 +155,7 @@ a{color:var(--accent-ink);text-decoration:none}
 </head>
 <body>
 <header class="site-head"><div class="wrap head-in">
-  <a class="brand" href="https://zhaojjjjjj.github.io"><img class="avatar" src="https://avatars.githubusercontent.com/u/102017381?v=4" alt="avatar"><span class="name">zhaojjjjjj</span></a>
+  <a class="brand" href="https://zhaojjjjjj.github.io"><img class="avatar" src="https://avatars.githubusercontent.com/u/102017381?v=4" alt="avatar"><span class="name">zhaojjjjjj<i>.</i></span></a>
   <nav class="nav">
 <a href="https://zhaojjjjjj.github.io/tag.html" title="搜索" aria-label="搜索">
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6 14 14"/></svg>
@@ -115,85 +163,125 @@ a{color:var(--accent-ink);text-decoration:none}
 <a href="https://zhaojjjjjj.github.io/rss.xml" target="_blank" title="RSS" aria-label="RSS">
   <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 3.5a9.5 9.5 0 0 1 9.5 9.5h-2.6a6.9 6.9 0 0 0-6.9-6.9V3.5Zm0 5.2a4.3 4.3 0 0 1 4.3 4.3H4.7a1.7 1.7 0 0 0-1.7-1.7V8.7ZM4 13.2a1.3 1.3 0 1 0 0-.01v.01Z"/></svg>
 </a>
-</nav>
+<button type="button" class="theme-btn" id="themeBtn" title="切换深浅色" aria-label="切换深浅色"><svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 9.5A5.8 5.8 0 1 1 6.5 2.5a4.6 4.6 0 0 0 7 7Z"/></svg><svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"/></svg></button></nav>
 </div></header>
 <main class="wrap">
 <section class="hero">
-  <p class="eyebrow">TECH NOTES</p>
-  <span class="total">共 <b>116</b> 篇</span>
+  <div>
+    <h1>Tech Notes<i>.</i></h1>
+  </div>
+  <div class="total"><b>116</b><span>篇文章</span></div>
 </section>
-<section class="posts">
-<a class="post-row" href="post/Chrome%20-%20-dong-jie-ji-zhi-%20%F0%9F%8F%A1.html">
+<section class="rowlist">
+<div class="year">2024</div><a class="post-row" style="--i:1" href="post/Chrome%20-%20-dong-jie-ji-zhi-%20%F0%9F%8F%A1.html">
     <span class="date">2024-07-19</span>
     <span class="ttl">Chrome - 冻结机制 🏡</span>
     <span class="tags"><span class="chip">浏览器</span></span>
-  </a><a class="post-row" href="post/Vue%20-%20-Suspense-%20%F0%9F%94%91.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:2" href="post/Vue%20-%20-Suspense-%20%F0%9F%94%91.html">
     <span class="date">2024-07-17</span>
     <span class="ttl">Vue - &lt;Suspense&gt; 🔑</span>
     <span class="tags"><span class="chip">Vue</span></span>
-  </a><a class="post-row" href="post/Vue%20-%20-qiang-zhi-zhong-xin-xuan-ran-zu-jian-%20%F0%9F%A6%8C.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:3" href="post/Vue%20-%20-qiang-zhi-zhong-xin-xuan-ran-zu-jian-%20%F0%9F%A6%8C.html">
     <span class="date">2024-07-15</span>
     <span class="ttl">Vue - 强制重新渲染组件 🦌</span>
     <span class="tags"><span class="chip">Vue</span></span>
-  </a><a class="post-row" href="post/What%20-%20C-S%20B-S%20%F0%9F%A4%B2.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:4" href="post/What%20-%20C-S%20B-S%20%F0%9F%A4%B2.html">
     <span class="date">2024-06-06</span>
     <span class="ttl">What - C/S B/S 🤲</span>
     <span class="tags"><span class="chip">基础</span></span>
-  </a><a class="post-row" href="post/JS%20-%20Input%20upload%20the%20same%20file%20issue%20%F0%9F%A4%A2.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:5" href="post/JS%20-%20Input%20upload%20the%20same%20file%20issue%20%F0%9F%A4%A2.html">
     <span class="date">2024-05-23</span>
     <span class="ttl">JS - Input upload the same file issue 🤢</span>
     <span class="tags"><span class="chip">JS</span></span>
-  </a><a class="post-row" href="post/VSCode%20-%20Settings%20%F0%9F%92%BB.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:6" href="post/VSCode%20-%20Settings%20%F0%9F%92%BB.html">
     <span class="date">2024-05-23</span>
     <span class="ttl">VSCode - Settings 💻</span>
     <span class="tags"><span class="chip">工程化</span></span>
-  </a><a class="post-row" href="post/JS%20-%20Array%20reduce%28%20%29%20%F0%9F%A5%BD.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:7" href="post/JS%20-%20Array%20reduce%28%20%29%20%F0%9F%A5%BD.html">
     <span class="date">2024-04-17</span>
     <span class="ttl">JS - Array reduce( ) 🥽</span>
     <span class="tags"><span class="chip">JS</span></span>
-  </a><a class="post-row" href="post/GSAP%20-%20GSAP%20and%20ScrollTrigger%20%F0%9F%90%B3.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:8" href="post/GSAP%20-%20GSAP%20and%20ScrollTrigger%20%F0%9F%90%B3.html">
     <span class="date">2024-04-16</span>
     <span class="ttl">GSAP - GSAP and ScrollTrigger 🐳</span>
     <span class="tags"><span class="chip">动画</span></span>
-  </a><a class="post-row" href="post/Git%20-%20Memo%20%F0%9F%A7%97.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:9" href="post/Git%20-%20Memo%20%F0%9F%A7%97.html">
     <span class="date">2024-04-12</span>
     <span class="ttl">Git - Memo 🧗</span>
     <span class="tags"><span class="chip">Git</span></span>
-  </a><a class="post-row" href="post/Vue%20-%20Change%20node_modules%20source%20code%20%F0%9F%A5%A9.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:10" href="post/Vue%20-%20Change%20node_modules%20source%20code%20%F0%9F%A5%A9.html">
     <span class="date">2024-04-02</span>
     <span class="ttl">Vue - Change node_modules source code 🥩</span>
     <span class="tags"><span class="chip">Vue</span></span>
-  </a><a class="post-row" href="post/H5%20-%20IPhone%20mobile%20can%27t%20see%20the%20phone%20number%20%F0%9F%A4%A6%F0%9F%8F%BC%E2%80%8D%E2%99%82%EF%B8%8F.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:11" href="post/H5%20-%20IPhone%20mobile%20can%27t%20see%20the%20phone%20number%20%F0%9F%A4%A6%F0%9F%8F%BC%E2%80%8D%E2%99%82%EF%B8%8F.html">
     <span class="date">2024-04-01</span>
     <span class="ttl">H5 - IPhone mobile can&#39;t see the phone number 🤦🏼‍♂️</span>
     <span class="tags"><span class="chip">H5</span></span>
-  </a><a class="post-row" href="post/Go%20-%20vscode%20save%20auto%20format%20%F0%9F%98%BD.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:12" href="post/Go%20-%20vscode%20save%20auto%20format%20%F0%9F%98%BD.html">
     <span class="date">2024-04-01</span>
     <span class="ttl">Go - vscode save auto format 😽</span>
     <span class="tags"><span class="chip">Go</span></span>
-  </a><a class="post-row" href="post/About%20publish%20NPM%20%F0%9F%AB%A4.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:13" href="post/About%20publish%20NPM%20%F0%9F%AB%A4.html">
     <span class="date">2024-03-27</span>
     <span class="ttl">About publish NPM 🫤</span>
     <span class="tags"><span class="chip">工程化</span></span>
-  </a><a class="post-row" href="post/H5%20-%20Page%20refresh%20when%20calling%20camera%20to%20take%20photos%20and%20upload%20%F0%9F%A4%A7.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:14" href="post/H5%20-%20Page%20refresh%20when%20calling%20camera%20to%20take%20photos%20and%20upload%20%F0%9F%A4%A7.html">
     <span class="date">2024-03-19</span>
     <span class="ttl">H5 - Page refresh when calling camera to take photos and upload 🤧</span>
     <span class="tags"><span class="chip">H5</span></span>
-  </a><a class="post-row" href="post/JS%20-%20Practical%20one%20line%20of%20code%20%28Array%29%20%F0%9F%A4%AF.html">
+    <span class="arr">→</span>
+  </a>
+<a class="post-row" style="--i:15" href="post/JS%20-%20Practical%20one%20line%20of%20code%20%28Array%29%20%F0%9F%A4%AF.html">
     <span class="date">2024-03-15</span>
     <span class="ttl">JS - Practical one line of code (Array) 🤯</span>
     <span class="tags"><span class="chip">JS</span></span>
+    <span class="arr">→</span>
   </a>
+
 </section><nav class="pager"><a href="https://zhaojjjjjj.github.io/page6.html">← 上一页</a><a href="https://zhaojjjjjj.github.io/page8.html">下一页 →</a>
 </nav>
 </main>
 <footer class="site-foot"><div class="wrap"><div class="foot-in">
-  <span>© <span id="cy"></span>&nbsp;<a href="https://zhaojjjjjj.github.io">zhaojjjjjj</a></span>
-  <span class="sep">·</span>
-  <span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank" rel="noopener">Gmeek</a></span>
+  <span>© <span id="cy"></span>&nbsp;<a href="https://zhaojjjjjj.github.io">zhaojjjjjj</a>&nbsp;·&nbsp;Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank" rel="noopener">Gmeek</a></span>
+  <span class="foot-links">
+    <a href="https://zhaojjjjjj.github.io/tag.html">标签</a>
+    <a href="https://zhaojjjjjj.github.io/rss.xml" target="_blank">RSS</a>
+    <a href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">回到顶部 ↑</a>
+  </span>
 </div>
 <script>document.getElementById('cy').textContent=new Date().getFullYear();</script></div></footer>
-<script>var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'search': 'M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z', 'rss': 'M2.002 2.725a.75.75 0 0 1 .797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 0 1-1.497.098 10.502 10.502 0 0 0-9.776-9.776.747.747 0 0 1-.7-.798ZM2.84 7.05h-.002a7.002 7.002 0 0 1 6.113 6.111.75.75 0 0 1-1.49.178 5.503 5.503 0 0 0-4.8-4.8.75.75 0 0 1 .179-1.489ZM2 13a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z', 'upload': 'M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z M11.78 4.72a.749.749 0 1 1-1.06 1.06L8.75 3.811V9.5a.75.75 0 0 1-1.5 0V3.811L5.28 5.78a.749.749 0 1 1-1.06-1.06l3.25-3.25a.749.749 0 0 1 1.06 0l3.25 3.25Z', 'post': 'M0 3.75C0 2.784.784 2 1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 14H1.75A1.75 1.75 0 0 1 0 12.25Zm1.75-.25a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25ZM3.5 6.25a.75.75 0 0 1 .75-.75h7a.75.75 0 0 1 0 1.5h-7a.75.75 0 0 1-.75-.75Zm.75 2.25h4a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1 0-1.5Z'};var utterancesLoad=0;</script>
+<script>var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'search': 'M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z', 'rss': 'M2.002 2.725a.75.75 0 0 1 .797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 0 1-1.497.098 10.502 10.502 0 0 0-9.776-9.776.747.747 0 0 1-.7-.798ZM2.84 7.05h-.002a7.002 7.002 0 0 1 6.113 6.111.75.75 0 0 1-1.49.178 5.503 5.503 0 0 0-4.8-4.8.75.75 0 0 1 .179-1.489ZM2 13a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z', 'upload': 'M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z M11.78 4.72a.749.749 0 1 1-1.06 1.06L8.75 3.811V9.5a.75.75 0 0 1-1.5 0V3.811L5.28 5.78a.749.749 0 1 1-1.06-1.06l3.25-3.25a.749.749 0 0 1 1.06 0l3.25 3.25Z', 'post': 'M0 3.75C0 2.784.784 2 1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 14H1.75A1.75 1.75 0 0 1 0 12.25Zm1.75-.25a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25ZM3.5 6.25a.75.75 0 0 1 .75-.75h7a.75.75 0 0 1 0 1.5h-7a.75.75 0 0 1-.75-.75Zm.75 2.25h4a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1 0-1.5Z'};var utterancesLoad=0;
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',cur);
+  try{localStorage.setItem('theme',cur);}catch(e){}
+});</script>
 
 
 
