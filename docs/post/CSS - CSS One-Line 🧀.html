@@ -186,71 +186,71 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
   </header>
   <div class="article-body prose"><h4>1. aspect-ratio</h4>
 <p><strong>描述</strong>: 用于定义元素的宽高比，简化了以往使用“填充黑客”的方法。只需指定一个比率，浏览器会自动调整元素的尺寸</p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">aspect-ratio-hd</span> {
-    <span class="pl-c1">aspect-ratio</span><span class="pl-kos">:</span> <span class="pl-c1">16</span><span class="pl-c1">/</span><span class="pl-c1">9</span>; 
-}
-.<span class="pl-c1">aspect-ratio-square</span> {
-    <span class="pl-c1">aspect-ratio</span><span class="pl-kos">:</span> <span class="pl-c1">1</span>; <span class="pl-c">/* 正方形 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">aspect-ratio-hd</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">aspect-ratio</span><span class="pl-kos">:</span> <span class="pl-c1">16</span><span class="pl-c1">/</span><span class="pl-c1">9</span><span class="pl-kos">;</span> 
+<span class="pl-kos">}</span>
+<span class="pl-kos">.</span><span class="pl-c1">aspect-ratio-square</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">aspect-ratio</span><span class="pl-kos">:</span> <span class="pl-c1">1</span><span class="pl-kos">;</span> <span class="pl-c">/* 正方形 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>2. object-fit</h4>
 <p><strong>描述</strong>: 控制替换元素（如图像）的内容如何适应其容器，常用值包括 <code class="notranslate">cover</code> 和 <code class="notranslate">scale-down</code></p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">image</span> {
-    <span class="pl-c1">object-fit</span><span class="pl-kos">:</span> cover; <span class="pl-c">/* 图像覆盖容器 */</span>
-    <span class="pl-c1">aspect-ratio</span><span class="pl-kos">:</span> <span class="pl-c1">1</span>; <span class="pl-c">/* 可选：约束图像大小 */</span>
-    <span class="pl-c1">max-block-size</span><span class="pl-kos">:</span> <span class="pl-c1">250<span class="pl-smi">px</span></span>; <span class="pl-c">/* 最大高度 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">image</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">object-fit</span><span class="pl-kos">:</span> cover<span class="pl-kos">;</span> <span class="pl-c">/* 图像覆盖容器 */</span>
+    <span class="pl-c1">aspect-ratio</span><span class="pl-kos">:</span> <span class="pl-c1">1</span><span class="pl-kos">;</span> <span class="pl-c">/* 可选：约束图像大小 */</span>
+    <span class="pl-c1">max-block-size</span><span class="pl-kos">:</span> <span class="pl-c1">250<span class="pl-smi">px</span></span><span class="pl-kos">;</span> <span class="pl-c">/* 最大高度 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>3. margin-inline</h4>
 <p><strong>描述</strong>: 用于设置元素的左右边距，简化了以往的 margin-left 和 margin-right 设置</p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">container</span> {
-    <span class="pl-c1">margin-inline</span><span class="pl-kos">:</span> auto; <span class="pl-c">/* 水平居中 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">container</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">margin-inline</span><span class="pl-kos">:</span> auto<span class="pl-kos">;</span> <span class="pl-c">/* 水平居中 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>4. text-underline-offset</h4>
 <p><strong>描述</strong>: 控制文本基线与下划线之间的距离，改善可读性</p>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-ent">a</span><span class="pl-kos">:</span><span class="pl-c1">not</span>([<span class="pl-c1">class</span>]) {
-    <span class="pl-c1">text-underline-offset</span><span class="pl-kos">:</span> <span class="pl-c1">0.25<span class="pl-smi">em</span></span>; <span class="pl-c">/* 下划线偏移量 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-ent">a</span><span class="pl-kos">:</span><span class="pl-c1">not</span><span class="pl-kos">(</span>[<span class="pl-c1">class</span>]<span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">text-underline-offset</span><span class="pl-kos">:</span> <span class="pl-c1">0.25<span class="pl-smi">em</span></span><span class="pl-kos">;</span> <span class="pl-c">/* 下划线偏移量 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>5. outline-offset</h4>
 <p><strong>描述</strong>: 设置轮廓与元素之间的距离，提升焦点可见性</p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">outline-offset</span> {
-    <span class="pl-c1">outline</span><span class="pl-kos">:</span> <span class="pl-c1">2<span class="pl-smi">px</span></span> dashed blue; <span class="pl-c">/* 蓝色虚线轮廓 */</span>
-    <span class="pl-c1">outline-offset</span><span class="pl-kos">:</span> <span class="pl-c1">.5<span class="pl-smi">em</span></span>; <span class="pl-c">/* 偏移量 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">outline-offset</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">outline</span><span class="pl-kos">:</span> <span class="pl-c1">2<span class="pl-smi">px</span></span> dashed blue<span class="pl-kos">;</span> <span class="pl-c">/* 蓝色虚线轮廓 */</span>
+    <span class="pl-c1">outline-offset</span><span class="pl-kos">:</span> <span class="pl-c1">.5<span class="pl-smi">em</span></span><span class="pl-kos">;</span> <span class="pl-c">/* 偏移量 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>6. scroll-margin-top/bottom</h4>
 <p><strong>描述</strong>: 在滚动到锚点时增加偏移量，避免导航条覆盖内容</p>
-<div class="highlight highlight-source-css"><pre class="notranslate">[<span class="pl-c1">id</span>] {
-    <span class="pl-c1">scroll-margin-top</span><span class="pl-kos">:</span> <span class="pl-c1">2<span class="pl-smi">rem</span></span>; <span class="pl-c">/* 向上增加空间 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate">[<span class="pl-c1">id</span>] <span class="pl-kos">{</span>
+    <span class="pl-c1">scroll-margin-top</span><span class="pl-kos">:</span> <span class="pl-c1">2<span class="pl-smi">rem</span></span><span class="pl-kos">;</span> <span class="pl-c">/* 向上增加空间 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>7. color-scheme</h4>
 <p><strong>描述</strong>: 定义浏览器 UI 元素（如表单控件和滚动条）的颜色方案，以适应深色或浅色主题</p>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">:</span><span class="pl-c1">root</span> {
-    <span class="pl-c1">color-scheme</span><span class="pl-kos">:</span> dark light; <span class="pl-c">/* 优先使用深色主题 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">:</span><span class="pl-c1">root</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">color-scheme</span><span class="pl-kos">:</span> dark light<span class="pl-kos">;</span> <span class="pl-c">/* 优先使用深色主题 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>8. accent-color</h4>
 <p><strong>描述</strong>: 修改复选框和单选按钮等表单控件的颜色，提高主题管理能力</p>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">:</span><span class="pl-c1">root</span> {
-    <span class="pl-c1">accent-color</span><span class="pl-kos">:</span> mediumvioletred; <span class="pl-c">/* 自定义控件颜色 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">:</span><span class="pl-c1">root</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">accent-color</span><span class="pl-kos">:</span> mediumvioletred<span class="pl-kos">;</span> <span class="pl-c">/* 自定义控件颜色 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>9. width: fit-content</h4>
 <p><strong>描述</strong>: 自动调整元素宽度以适应内容，类似于 <code class="notranslate">inline-block</code></p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">fit-content</span> {
-    <span class="pl-c1">width</span><span class="pl-kos">:</span> fit-content; <span class="pl-c">/* 根据内容调整宽度 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">fit-content</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">width</span><span class="pl-kos">:</span> fit-content<span class="pl-kos">;</span> <span class="pl-c">/* 根据内容调整宽度 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>10. overscroll-behavior</h4>
 <p><strong>描述</strong>: 控制滚动区域的行为，防止滚动超出边界影响父页面</p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">sidebar</span><span class="pl-kos">,</span> .<span class="pl-c1">article</span> {
-    <span class="pl-c1">overscroll-behavior</span><span class="pl-kos">:</span> contain; <span class="pl-c">/* 限制滚动行为 */</span>
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">sidebar</span><span class="pl-kos">,</span> <span class="pl-kos">.</span><span class="pl-c1">article</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">overscroll-behavior</span><span class="pl-kos">:</span> contain<span class="pl-kos">;</span> <span class="pl-c">/* 限制滚动行为 */</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>11. text-wrap</h4>
 <p><strong>描述</strong>: 改善文本排版，防止孤立词和不平衡行</p>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">:</span><span class="pl-c1">is</span>(<span class="pl-ent">h1</span><span class="pl-kos">,</span> <span class="pl-ent">h2</span><span class="pl-kos">,</span> <span class="pl-ent">h3</span><span class="pl-kos">,</span> <span class="pl-ent">h4</span><span class="pl-kos">,</span> .<span class="pl-c1">text-balance</span>) {
-    <span class="pl-c1">text-wrap</span><span class="pl-kos">:</span> balance; <span class="pl-c">/* 平衡文本行 */</span>
-    <span class="pl-c1">max-inline-size</span><span class="pl-kos">:</span> <span class="pl-c1">25<span class="pl-smi">ch</span></span>;
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">:</span><span class="pl-c1">is</span><span class="pl-kos">(</span><span class="pl-ent">h1</span><span class="pl-kos">,</span> <span class="pl-ent">h2</span><span class="pl-kos">,</span> <span class="pl-ent">h3</span><span class="pl-kos">,</span> <span class="pl-ent">h4</span><span class="pl-kos">,</span> <span class="pl-kos">.</span><span class="pl-c1">text-balance</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">text-wrap</span><span class="pl-kos">:</span> balance<span class="pl-kos">;</span> <span class="pl-c">/* 平衡文本行 */</span>
+    <span class="pl-c1">max-inline-size</span><span class="pl-kos">:</span> <span class="pl-c1">25<span class="pl-smi">ch</span></span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
 <h4>12. scrollbar-gutter</h4>
 <p><strong>描述</strong>: 为滚动条预留空间，避免因滚动条出现或消失而导致布局偏移</p>
-<div class="highlight highlight-source-css"><pre class="notranslate">.<span class="pl-c1">container</span> {
-    <span class="pl-c1">scrollbar-gutter</span><span class="pl-kos">:</span> stable; <span class="pl-c">/* 保持滚动条空间 */</span>
-}</pre></div></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">.</span><span class="pl-c1">container</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">scrollbar-gutter</span><span class="pl-kos">:</span> stable<span class="pl-kos">;</span> <span class="pl-c">/* 保持滚动条空间 */</span>
+<span class="pl-kos">}</span></pre></div></div>
   <div class="article-tail"></div>
   <div class="end-mark" aria-hidden="true"><i></i></div>
   

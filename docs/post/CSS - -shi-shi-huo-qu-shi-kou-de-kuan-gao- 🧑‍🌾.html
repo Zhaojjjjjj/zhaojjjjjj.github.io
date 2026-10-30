@@ -332,67 +332,67 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
   </header>
   <div class="article-body prose"><h2>CODE</h2>
 <div class="highlight highlight-text-html-basic"><pre class="notranslate"><span class="pl-kos">&lt;</span><span class="pl-ent">div</span><span class="pl-kos">&gt;</span><span class="pl-kos">&lt;/</span><span class="pl-ent">div</span><span class="pl-kos">&gt;</span></pre></div>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-k">@property</span> --_w {
-  <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span>;
-  <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true;
-  <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vw</span></span>;
-}
-<span class="pl-k">@property</span> --_h {
-  <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span>;
-  <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true;
-  <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vh</span></span>;
-}
-<span class="pl-kos">:</span><span class="pl-c1">root</span> {
-  <span class="pl-s1">--w</span><span class="pl-kos">:</span> <span class="pl-en">tan</span>(<span class="pl-en">atan2</span>(<span class="pl-en">var</span>(<span class="pl-s1">--_w</span>)<span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>));
-  <span class="pl-s1">--h</span><span class="pl-kos">:</span> <span class="pl-en">tan</span>(<span class="pl-en">atan2</span>(<span class="pl-en">var</span>(<span class="pl-s1">--_h</span>)<span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>));
-}
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-k">@property</span> --_w <span class="pl-kos">{</span>
+  <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span><span class="pl-kos">;</span>
+  <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true<span class="pl-kos">;</span>
+  <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vw</span></span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">@property</span> --_h <span class="pl-kos">{</span>
+  <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span><span class="pl-kos">;</span>
+  <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true<span class="pl-kos">;</span>
+  <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vh</span></span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-kos">:</span><span class="pl-c1">root</span> <span class="pl-kos">{</span>
+  <span class="pl-c1">--w</span><span class="pl-kos">:</span> <span class="pl-en">tan</span><span class="pl-kos">(</span><span class="pl-en">atan2</span><span class="pl-kos">(</span><span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--_w</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+  <span class="pl-c1">--h</span><span class="pl-kos">:</span> <span class="pl-en">tan</span><span class="pl-kos">(</span><span class="pl-en">atan2</span><span class="pl-kos">(</span><span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--_h</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
 
 <span class="pl-ent">html</span><span class="pl-kos">,</span>
-<span class="pl-ent">body</span> {
-  <span class="pl-c1">height</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">%</span></span>;
-  <span class="pl-c1">box-sizing</span><span class="pl-kos">:</span> border-box;
-}
+<span class="pl-ent">body</span> <span class="pl-kos">{</span>
+  <span class="pl-c1">height</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">%</span></span><span class="pl-kos">;</span>
+  <span class="pl-c1">box-sizing</span><span class="pl-kos">:</span> border-box<span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
 
-<span class="pl-ent">div</span> {
-  <span class="pl-c1">height</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">%</span></span>;
-  <span class="pl-c1">background</span><span class="pl-kos">:</span> <span class="pl-en">linear-gradient</span>(
+<span class="pl-ent">div</span> <span class="pl-kos">{</span>
+  <span class="pl-c1">height</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">%</span></span><span class="pl-kos">;</span>
+  <span class="pl-c1">background</span><span class="pl-kos">:</span> <span class="pl-en">linear-gradient</span><span class="pl-kos">(</span>
     <span class="pl-c1">125<span class="pl-smi">deg</span></span><span class="pl-kos">,</span>
     <span class="pl-pds"><span class="pl-kos">#</span>ecfcff</span> <span class="pl-c1">0<span class="pl-smi">%</span></span><span class="pl-kos">,</span>
     <span class="pl-pds"><span class="pl-kos">#</span>ecfcff</span> <span class="pl-c1">40<span class="pl-smi">%</span></span><span class="pl-kos">,</span>
-    <span class="pl-pds"><span class="pl-kos">#</span>b2fcff</span> <span class="pl-en">calc</span>(<span class="pl-c1">40<span class="pl-smi">%</span></span> <span class="pl-c1">+</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>)<span class="pl-kos">,</span>
+    <span class="pl-pds"><span class="pl-kos">#</span>b2fcff</span> <span class="pl-en">calc</span><span class="pl-kos">(</span><span class="pl-c1">40<span class="pl-smi">%</span></span> <span class="pl-c1">+</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">,</span>
     <span class="pl-pds"><span class="pl-kos">#</span>b2fcff</span> <span class="pl-c1">60<span class="pl-smi">%</span></span><span class="pl-kos">,</span>
-    <span class="pl-pds"><span class="pl-kos">#</span>5edfff</span> <span class="pl-en">calc</span>(<span class="pl-c1">60<span class="pl-smi">%</span></span> <span class="pl-c1">+</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>)<span class="pl-kos">,</span>
+    <span class="pl-pds"><span class="pl-kos">#</span>5edfff</span> <span class="pl-en">calc</span><span class="pl-kos">(</span><span class="pl-c1">60<span class="pl-smi">%</span></span> <span class="pl-c1">+</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">,</span>
     <span class="pl-pds"><span class="pl-kos">#</span>5edfff</span> <span class="pl-c1">72<span class="pl-smi">%</span></span><span class="pl-kos">,</span>
-    <span class="pl-pds"><span class="pl-kos">#</span>3e64ff</span> <span class="pl-en">calc</span>(<span class="pl-c1">72<span class="pl-smi">%</span></span> <span class="pl-c1">+</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>)<span class="pl-kos">,</span>
+    <span class="pl-pds"><span class="pl-kos">#</span>3e64ff</span> <span class="pl-en">calc</span><span class="pl-kos">(</span><span class="pl-c1">72<span class="pl-smi">%</span></span> <span class="pl-c1">+</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">,</span>
     <span class="pl-pds"><span class="pl-kos">#</span>3e64ff</span> <span class="pl-c1">100<span class="pl-smi">%</span></span>
-  );
-  <span class="pl-ent">&amp;</span>::<span class="pl-c1">before</span> {
-    <span class="pl-c1">content</span><span class="pl-kos">:</span> <span class="pl-en">counter</span>(w) <span class="pl-s">"x"</span> <span class="pl-en">counter</span>(h);
-    <span class="pl-c1">counter-reset</span><span class="pl-kos">:</span> h <span class="pl-en">var</span>(<span class="pl-s1">--h</span>) w <span class="pl-en">var</span>(<span class="pl-s1">--w</span>);
-    <span class="pl-c1">position</span><span class="pl-kos">:</span> absolute;
-    <span class="pl-c1">top</span><span class="pl-kos">:</span> <span class="pl-c1">50<span class="pl-smi">%</span></span>;
-    <span class="pl-c1">left</span><span class="pl-kos">:</span> <span class="pl-c1">50<span class="pl-smi">%</span></span>;
-    <span class="pl-c1">transform</span><span class="pl-kos">:</span> <span class="pl-en">translate</span>(<span class="pl-c1">-50<span class="pl-smi">%</span></span><span class="pl-kos">,</span> <span class="pl-c1">-50<span class="pl-smi">%</span></span>);
-    <span class="pl-c1">font-size</span><span class="pl-kos">:</span> <span class="pl-c1">12<span class="pl-smi">rem</span></span>;
-    <span class="pl-c1">mix-blend-mode</span><span class="pl-kos">:</span> difference;
-    <span class="pl-c1">white-space</span><span class="pl-kos">:</span> nowrap;
-    <span class="pl-c1">color</span><span class="pl-kos">:</span> <span class="pl-pds"><span class="pl-kos">#</span>fff</span>;
-    <span class="pl-c1">font-weight</span><span class="pl-kos">:</span> <span class="pl-c1">700</span>;
-    <span class="pl-c1">white-space</span><span class="pl-kos">:</span> nowrap;
-  }
-}</pre></div>
+  <span class="pl-kos">)</span><span class="pl-kos">;</span>
+  <span class="pl-ent">&amp;</span><span class="pl-kos">::</span><span class="pl-c1">before</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">content</span><span class="pl-kos">:</span> <span class="pl-en">counter</span><span class="pl-kos">(</span>w<span class="pl-kos">)</span> <span class="pl-s">"x"</span> <span class="pl-en">counter</span><span class="pl-kos">(</span>h<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-c1">counter-reset</span><span class="pl-kos">:</span> h <span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--h</span><span class="pl-kos">)</span> w <span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--w</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-c1">position</span><span class="pl-kos">:</span> absolute<span class="pl-kos">;</span>
+    <span class="pl-c1">top</span><span class="pl-kos">:</span> <span class="pl-c1">50<span class="pl-smi">%</span></span><span class="pl-kos">;</span>
+    <span class="pl-c1">left</span><span class="pl-kos">:</span> <span class="pl-c1">50<span class="pl-smi">%</span></span><span class="pl-kos">;</span>
+    <span class="pl-c1">transform</span><span class="pl-kos">:</span> <span class="pl-en">translate</span><span class="pl-kos">(</span><span class="pl-c1">-50<span class="pl-smi">%</span></span><span class="pl-kos">,</span> <span class="pl-c1">-50<span class="pl-smi">%</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-c1">font-size</span><span class="pl-kos">:</span> <span class="pl-c1">12<span class="pl-smi">rem</span></span><span class="pl-kos">;</span>
+    <span class="pl-c1">mix-blend-mode</span><span class="pl-kos">:</span> difference<span class="pl-kos">;</span>
+    <span class="pl-c1">white-space</span><span class="pl-kos">:</span> nowrap<span class="pl-kos">;</span>
+    <span class="pl-c1">color</span><span class="pl-kos">:</span> <span class="pl-pds"><span class="pl-kos">#</span>fff</span><span class="pl-kos">;</span>
+    <span class="pl-c1">font-weight</span><span class="pl-kos">:</span> <span class="pl-c1">700</span><span class="pl-kos">;</span>
+    <span class="pl-c1">white-space</span><span class="pl-kos">:</span> nowrap<span class="pl-kos">;</span>
+  <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
 <h2>EXPLAIN</h2>
 <h3><code class="notranslate">@property</code> 规则</h3>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-k">@property</span> --_w {
-    <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span>;
-    <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true;
-    <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vw</span></span>;
-}
-<span class="pl-k">@property</span> --_h {
-    <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span>;
-    <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true;
-    <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vh</span></span>;
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-k">@property</span> --_w <span class="pl-kos">{</span>
+    <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span><span class="pl-kos">;</span>
+    <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true<span class="pl-kos">;</span>
+    <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vw</span></span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">@property</span> --_h <span class="pl-kos">{</span>
+    <span class="pl-c1">syntax</span><span class="pl-kos">:</span> <span class="pl-s">"&lt;length&gt;"</span><span class="pl-kos">;</span>
+    <span class="pl-c1">inherits</span><span class="pl-kos">:</span> true<span class="pl-kos">;</span>
+    <span class="pl-c1">initial-value</span><span class="pl-kos">:</span> <span class="pl-c1">100<span class="pl-smi">vh</span></span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
 <ul>
 <li><code class="notranslate">@property</code> 规则用于定义自定义属性的行为。在这里，<code class="notranslate">--_w</code> 和 <code class="notranslate">--_h</code> 是两个自定义属性。</li>
 <li><code class="notranslate">syntax: "&lt;length&gt;"</code> 表示这些属性的值应该是长度单位（如 <code class="notranslate">px</code>、<code class="notranslate">vw</code>、<code class="notranslate">vh</code>）。</li>
@@ -400,25 +400,25 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
 <li><code class="notranslate">initial-value</code> 指定了这些属性的初始值，<code class="notranslate">--_w</code> 的初始值是 <code class="notranslate">100vw</code>（视口宽度的 100%），<code class="notranslate">--_h</code> 的初始值是 <code class="notranslate">100vh</code>（视口高度的 100%）。</li>
 </ul>
 <h3>自定义属性计算</h3>
-<div class="highlight highlight-source-css"><pre class="notranslate">{
-    <span class="pl-s1">--w</span><span class="pl-kos">:</span> <span class="pl-en">tan</span>(<span class="pl-en">atan2</span>(<span class="pl-en">var</span>(<span class="pl-s1">--_w</span>)<span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>));
-    <span class="pl-s1">--h</span><span class="pl-kos">:</span> <span class="pl-en">tan</span>(<span class="pl-en">atan2</span>(<span class="pl-en">var</span>(<span class="pl-s1">--_h</span>)<span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span>));
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">{</span>
+    <span class="pl-c1">--w</span><span class="pl-kos">:</span> <span class="pl-en">tan</span><span class="pl-kos">(</span><span class="pl-en">atan2</span><span class="pl-kos">(</span><span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--_w</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-c1">--h</span><span class="pl-kos">:</span> <span class="pl-en">tan</span><span class="pl-kos">(</span><span class="pl-en">atan2</span><span class="pl-kos">(</span><span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--_h</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-c1">1<span class="pl-smi">px</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
 <ul>
 <li><code class="notranslate">var(--_w)</code> 和 <code class="notranslate">var(--_h)</code> 来获取之前定义的自定义属性值。</li>
 <li><code class="notranslate">atan2()</code> 和 <code class="notranslate">tan()</code> 是数学函数，目的是计算这些属性的某种变换值。</li>
 <li><code class="notranslate">--w</code> 和 <code class="notranslate">--h</code> 是计算出来的值，涉及到三角函数的变换。</li>
 </ul>
 <h4><code class="notranslate">div</code> 样式</h4>
-<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-ent">div</span> {
-    ......
-    <span class="pl-ent">&amp;</span>::<span class="pl-c1">before</span> {
-        <span class="pl-c1">content</span><span class="pl-kos">:</span> <span class="pl-en">counter</span>(w) <span class="pl-s">"x"</span> <span class="pl-en">counter</span>(h);
-        <span class="pl-c1">counter-reset</span><span class="pl-kos">:</span> h <span class="pl-en">var</span>(<span class="pl-s1">--h</span>) w <span class="pl-en">var</span>(<span class="pl-s1">--w</span>);
-        <span class="pl-c1">mix-blend-mode</span><span class="pl-kos">:</span> difference;
-        ......
-    }
-}</pre></div>
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-ent">div</span> <span class="pl-kos">{</span>
+    <span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span>
+    <span class="pl-ent">&amp;</span><span class="pl-kos">::</span><span class="pl-c1">before</span> <span class="pl-kos">{</span>
+        <span class="pl-c1">content</span><span class="pl-kos">:</span> <span class="pl-en">counter</span><span class="pl-kos">(</span>w<span class="pl-kos">)</span> <span class="pl-s">"x"</span> <span class="pl-en">counter</span><span class="pl-kos">(</span>h<span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-c1">counter-reset</span><span class="pl-kos">:</span> h <span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--h</span><span class="pl-kos">)</span> w <span class="pl-en">var</span><span class="pl-kos">(</span><span class="pl-s1">--w</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-c1">mix-blend-mode</span><span class="pl-kos">:</span> difference<span class="pl-kos">;</span>
+        <span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
 <ul>
 <li><code class="notranslate">content: counter(w) "x" counter(h);</code> 显示了 <code class="notranslate">counter(w)</code> 和 <code class="notranslate">counter(h)</code> 的值，中间用 "x" 分隔。</li>
 <li><code class="notranslate">counter-reset: h var(--h) w var(--w);</code> 重置了计数器 <code class="notranslate">w</code> 和 <code class="notranslate">h</code> 的值，使用自定义属性的值。</li>

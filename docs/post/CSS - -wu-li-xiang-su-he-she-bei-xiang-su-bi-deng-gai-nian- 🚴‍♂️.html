@@ -208,18 +208,18 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
 <h3>5. 媒体查询中的设备像素比</h3>
 <p>可以使用媒体查询来检测和响应不同的 DPR，从而针对不同分辨率设备优化网页设计</p>
 <div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-c">/* 针对 DPR 为 1 的设备 */</span>
-<span class="pl-k">@media</span> <span class="pl-c1">only</span> screen <span class="pl-c1">and</span> (<span class="pl-c1">min-resolution</span><span class="pl-kos">:</span> <span class="pl-c1">96<span class="pl-smi">dpi</span></span>) {
-  <span class="pl-ent">body</span> {
-    <span class="pl-c1">font-size</span><span class="pl-kos">:</span> <span class="pl-c1">16<span class="pl-smi">px</span></span>;
-  }
-}
+<span class="pl-k">@media</span> <span class="pl-c1">only</span> screen <span class="pl-c1">and</span> <span class="pl-kos">(</span><span class="pl-c1">min-resolution</span><span class="pl-kos">:</span> <span class="pl-c1">96<span class="pl-smi">dpi</span></span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+  <span class="pl-ent">body</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">font-size</span><span class="pl-kos">:</span> <span class="pl-c1">16<span class="pl-smi">px</span></span><span class="pl-kos">;</span>
+  <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
 
 <span class="pl-c">/* 针对 DPR 为 2 的设备 */</span>
-<span class="pl-k">@media</span> <span class="pl-c1">only</span> screen <span class="pl-c1">and</span> (<span class="pl-c1">min-resolution</span><span class="pl-kos">:</span> <span class="pl-c1">192<span class="pl-smi">dpi</span></span>) {
-  <span class="pl-ent">body</span> {
-    <span class="pl-c1">font-size</span><span class="pl-kos">:</span> <span class="pl-c1">14<span class="pl-smi">px</span></span>;
-  }
-}</pre></div>
+<span class="pl-k">@media</span> <span class="pl-c1">only</span> screen <span class="pl-c1">and</span> <span class="pl-kos">(</span><span class="pl-c1">min-resolution</span><span class="pl-kos">:</span> <span class="pl-c1">192<span class="pl-smi">dpi</span></span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+  <span class="pl-ent">body</span> <span class="pl-kos">{</span>
+    <span class="pl-c1">font-size</span><span class="pl-kos">:</span> <span class="pl-c1">14<span class="pl-smi">px</span></span><span class="pl-kos">;</span>
+  <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
 <h3>6. 使用 <code class="notranslate">window.devicePixelRatio</code></h3>
 <p>在 JavaScript 中，可以使用 <code class="notranslate">window.devicePixelRatio</code> 来获取设备的 DPR</p>
 <div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-smi">console</span><span class="pl-kos">.</span><span class="pl-en">log</span><span class="pl-kos">(</span><span class="pl-smi">window</span><span class="pl-kos">.</span><span class="pl-c1">devicePixelRatio</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 输出该设备的 DPR，例如 2</span></pre></div>

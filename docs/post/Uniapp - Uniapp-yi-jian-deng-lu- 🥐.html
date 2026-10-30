@@ -261,70 +261,70 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
 <li>新增刚添加的应用</li>
 </ul>
 <h3>8. uni一键登录的授权弹出界面是默认是半屏的，也可以配置为全屏。这个界面本质是运营商sdk弹出的，授权弹出界面可以通过 univerifyStyle 设置有限定制</h3>
-<div class="highlight highlight-source-css"><pre class="notranslate">{
+<div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-kos">{</span>
     <span class="pl-s">"fullScreen"</span><span class="pl-kos">:</span> <span class="pl-c1">false</span><span class="pl-kos">,</span> // 是否全屏显示，默认值： false
     <span class="pl-s">"backgroundColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#ffffff"</span><span class="pl-kos">,</span>  // 授权页面背景颜色，默认值：#ffffff
     <span class="pl-s">"backgroundImage"</span><span class="pl-kos">:</span> <span class="pl-s">""</span><span class="pl-kos">,</span> // 全屏显示的背景图片，默认值："" （仅支持本地图片，只有全屏显示时支持）
-    <span class="pl-s">"icon"</span><span class="pl-kos">:</span> {
+    <span class="pl-s">"icon"</span><span class="pl-kos">:</span> <span class="pl-kos">{</span>
         <span class="pl-s">"path"</span><span class="pl-kos">:</span> <span class="pl-s">"static/xxx.png"</span><span class="pl-kos">,</span> // 自定义显示在授权框中的logo，仅支持本地图片 默认显示App logo
         <span class="pl-s">"width"</span><span class="pl-kos">:</span>  <span class="pl-s">"60px"</span><span class="pl-kos">,</span>  //图标宽度 默认值：60px
-        <span class="pl-s">"height"</span><span class="pl-kos">:</span> <span class="pl-s">"60px"</span>   //图标高度 默认值：60px
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"closeIcon"</span><span class="pl-kos">:</span> {
-        <span class="pl-s">"path"</span><span class="pl-kos">:</span> <span class="pl-s">"static/xxx.png"</span><span class="pl-kos">,</span> // 自定义显示在授权框中的logo，仅支持本地图片
-        <span class="pl-s">"width"</span><span class="pl-kos">:</span>  <span class="pl-s">"60px"</span><span class="pl-kos">,</span>  //图标宽度 默认值：60px (HBuilderX 4.0+ 仅iOS支持)
-        <span class="pl-s">"height"</span><span class="pl-kos">:</span> <span class="pl-s">"60px"</span>   //图标高度 默认值：60px (HBuilderX 4.0+ 仅iOS支持)
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"phoneNum"</span><span class="pl-kos">:</span> {
-        <span class="pl-s">"color"</span><span class="pl-kos">:</span> <span class="pl-s">"#202020"</span>  // 手机号文字颜色 默认值：#202020
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"slogan"</span><span class="pl-kos">:</span> {
-        <span class="pl-s">"color"</span><span class="pl-kos">:</span> <span class="pl-s">"#BBBBBB"</span>  //  slogan 字体颜色 默认值：#BBBBBB
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"authButton"</span><span class="pl-kos">:</span> {
-        <span class="pl-s">"normalColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#3479f5"</span><span class="pl-kos">,</span> // 授权按钮正常状态背景颜色 默认值：#3479f5
-        <span class="pl-s">"highlightColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#2861c5"</span><span class="pl-kos">,</span>  // 授权按钮按下状态背景颜色 默认值：#2861c5（仅ios支持）
-        <span class="pl-s">"disabledColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#73aaf5"</span><span class="pl-kos">,</span>  // 授权按钮不可点击时背景颜色 默认值：#73aaf5（仅ios支持）
-        <span class="pl-s">"textColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#ffffff"</span><span class="pl-kos">,</span>  // 授权按钮文字颜色 默认值：#ffffff
-        <span class="pl-s">"title"</span><span class="pl-kos">:</span> <span class="pl-s">"本机号码一键登录"</span><span class="pl-kos">,</span> // 授权按钮文案 默认值：“本机号码一键登录”
-        <span class="pl-s">"borderRadius"</span><span class="pl-kos">:</span> <span class="pl-s">"24px"</span>	// 授权按钮圆角 默认值："24px" （按钮高度的一半）
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"otherLoginButton"</span><span class="pl-kos">:</span> {
-        <span class="pl-s">"visible"</span><span class="pl-kos">:</span> true<span class="pl-kos">,</span> // 是否显示其他登录按钮，默认值：true
-        <span class="pl-s">"normalColor"</span><span class="pl-kos">:</span> <span class="pl-s">""</span><span class="pl-kos">,</span> // 其他登录按钮正常状态背景颜色 默认值：透明
-        <span class="pl-s">"highlightColor"</span><span class="pl-kos">:</span> <span class="pl-s">""</span><span class="pl-kos">,</span> // 其他登录按钮按下状态背景颜色 默认值：透明
-        <span class="pl-s">"textColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#656565"</span><span class="pl-kos">,</span> // 其他登录按钮文字颜色 默认值：#656565
-        <span class="pl-s">"title"</span><span class="pl-kos">:</span> <span class="pl-s">"其他登录方式"</span><span class="pl-kos">,</span> // 其他登录方式按钮文字 默认值：“其他登录方式”
-        <span class="pl-s">"borderColor"</span><span class="pl-kos">:</span> <span class="pl-s">""</span><span class="pl-kos">,</span>  //边框颜色 默认值：透明（仅iOS支持）
-        <span class="pl-s">"borderRadius"</span><span class="pl-kos">:</span> <span class="pl-s">"0px"</span> // 其他登录按钮圆角 默认值："24px" （按钮高度的一半）
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"privacyTerms"</span><span class="pl-kos">:</span> {
-        <span class="pl-s">"defaultCheckBoxState"</span><span class="pl-kos">:</span><span class="pl-c1">true</span><span class="pl-kos">,</span> // 条款勾选框初始状态 默认值： true
-        <span class="pl-s">"isCenterHint"</span><span class="pl-kos">:</span><span class="pl-c1">false</span><span class="pl-kos">,</span> //未勾选服务条款时点击登录按钮的提示是否居中显示 默认值: false (3.7.13+ 版本支持)
-        <span class="pl-s">"uncheckedImage"</span><span class="pl-kos">:</span><span class="pl-s">""</span><span class="pl-kos">,</span> // 可选 条款勾选框未选中状态图片（仅支持本地图片 建议尺寸 24x24px）(3.2.0+ 版本支持)
-        <span class="pl-s">"checkedImage"</span><span class="pl-kos">:</span><span class="pl-s">""</span><span class="pl-kos">,</span> // 可选 条款勾选框选中状态图片（仅支持本地图片 建议尺寸24x24px）(3.2.0+ 版本支持)
-        <span class="pl-s">"checkBoxSize"</span><span class="pl-kos">:</span>12<span class="pl-kos">,</span> // 可选 条款勾选框大小
-        <span class="pl-s">"textColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#BBBBBB"</span><span class="pl-kos">,</span> // 文字颜色 默认值：#BBBBBB
-        <span class="pl-s">"termsColor"</span><span class="pl-kos">:</span> <span class="pl-s">"#5496E3"</span><span class="pl-kos">,</span> //  协议文字颜色 默认值： #5496E3
-        <span class="pl-s">"prefix"</span><span class="pl-kos">:</span> <span class="pl-s">"我已阅读并同意"</span><span class="pl-kos">,</span> // 条款前的文案 默认值：“我已阅读并同意”
-        <span class="pl-s">"suffix"</span><span class="pl-kos">:</span> <span class="pl-s">"并使用本机号码登录"</span><span class="pl-kos">,</span> // 条款后的文案 默认值：“并使用本机号码登录”
-        <span class="pl-s">"privacyItems"</span><span class="pl-kos">:</span><span class="pl-c1"></span> [  // 自定义协议条款，最大支持2个，需要同时设置url和title. 否则不生效
-            {
-                <span class="pl-s">"url"</span><span class="pl-kos">:</span> <span class="pl-s">"https://"</span><span class="pl-kos">,</span> // 点击跳转的协议详情页面
-                <span class="pl-s">"title"</span><span class="pl-kos">:</span> <span class="pl-s">"用户服务协议"</span> // 协议名称
-            }
-        ]
-    }<span class="pl-kos">,</span>
-    <span class="pl-s">"buttons"</span><span class="pl-kos">:</span> {  // 自定义页面下方按钮仅全屏模式生效（3.1.14+ 版本支持）
-        <span class="pl-s">"iconWidth"</span><span class="pl-kos">:</span> <span class="pl-s">"45px"</span><span class="pl-kos">,</span> // 图标宽度（高度等比例缩放） 默认值：45px
-        <span class="pl-s">"list"</span><span class="pl-kos">:</span> [
-            {
-                <span class="pl-s">"provider"</span><span class="pl-kos">:</span> <span class="pl-s">"apple"</span><span class="pl-kos">,</span>
-                <span class="pl-s">"iconPath"</span><span class="pl-kos">:</span> <span class="pl-s">"/static/apple.png"</span> // 图标路径仅支持本地图片
-            }<span class="pl-kos">,</span>
-            {
-                <span class="pl-s">"provider"</span><span class="pl-kos">:</span> <span class="pl-s">"weixin"</span><span class="pl-kos">,</span>
-                <span class="pl-s">"iconPath"</span><span class="pl-kos">:</span> <span class="pl-s">"/static/wechat.png"</span> // 图标路径仅支持本地图片
+        <span class="pl-s">"height"</span><span class="pl-kos">:</span> "60px<span class="pl-s">"   //图标高度 默认值：60px</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>closeIcon<span class="pl-s">": {</span>
+<span class="pl-s">        "</span>path<span class="pl-s">": "</span>static<span class="pl-c1">/</span>xxx<span class="pl-kos">.</span><span class="pl-c1">png</span><span class="pl-s">", // 自定义显示在授权框中的logo，仅支持本地图片</span>
+<span class="pl-s">        "</span>width<span class="pl-s">":  "</span>60px<span class="pl-s">",  //图标宽度 默认值：60px (HBuilderX 4.0+ 仅iOS支持)</span>
+<span class="pl-s">        "</span>height<span class="pl-s">": "</span>60px<span class="pl-s">"   //图标高度 默认值：60px (HBuilderX 4.0+ 仅iOS支持)</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>phoneNum<span class="pl-s">": {</span>
+<span class="pl-s">        "</span>color<span class="pl-s">": "</span><span class="pl-kos">#</span>202020<span class="pl-s">"  // 手机号文字颜色 默认值：#202020</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>slogan<span class="pl-s">": {</span>
+<span class="pl-s">        "</span>color<span class="pl-s">": "</span><span class="pl-kos">#</span><span class="pl-c1">BBBBBB</span><span class="pl-s">"  //  slogan 字体颜色 默认值：#BBBBBB</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>authButton<span class="pl-s">": {</span>
+<span class="pl-s">        "</span>normalColor<span class="pl-s">": "</span><span class="pl-kos">#</span>3479f5<span class="pl-s">", // 授权按钮正常状态背景颜色 默认值：#3479f5</span>
+<span class="pl-s">        "</span>highlightColor<span class="pl-s">": "</span><span class="pl-kos">#</span>2861c5<span class="pl-s">",  // 授权按钮按下状态背景颜色 默认值：#2861c5（仅ios支持）</span>
+<span class="pl-s">        "</span>disabledColor<span class="pl-s">": "</span><span class="pl-kos">#</span>73aaf5<span class="pl-s">",  // 授权按钮不可点击时背景颜色 默认值：#73aaf5（仅ios支持）</span>
+<span class="pl-s">        "</span>textColor<span class="pl-s">": "</span><span class="pl-kos">#</span><span class="pl-c1">ffffff</span><span class="pl-s">",  // 授权按钮文字颜色 默认值：#ffffff</span>
+<span class="pl-s">        "</span>title<span class="pl-s">": "</span>本机号码一键登录<span class="pl-s">", // 授权按钮文案 默认值：“本机号码一键登录”</span>
+<span class="pl-s">        "</span>borderRadius<span class="pl-s">": "</span>24px<span class="pl-s">"	// 授权按钮圆角 默认值："</span>24px<span class="pl-s">" （按钮高度的一半）</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>otherLoginButton<span class="pl-s">": {</span>
+<span class="pl-s">        "</span>visible<span class="pl-s">": true, // 是否显示其他登录按钮，默认值：true</span>
+<span class="pl-s">        "</span>normalColor<span class="pl-s">": "</span><span class="pl-s">", // 其他登录按钮正常状态背景颜色 默认值：透明</span>
+<span class="pl-s">        "</span>highlightColor<span class="pl-s">": "</span><span class="pl-s">", // 其他登录按钮按下状态背景颜色 默认值：透明</span>
+<span class="pl-s">        "</span>textColor<span class="pl-s">": "</span><span class="pl-kos">#</span>656565<span class="pl-s">", // 其他登录按钮文字颜色 默认值：#656565</span>
+<span class="pl-s">        "</span>title<span class="pl-s">": "</span>其他登录方式<span class="pl-s">", // 其他登录方式按钮文字 默认值：“其他登录方式”</span>
+<span class="pl-s">        "</span>borderColor<span class="pl-s">": "</span><span class="pl-s">",  //边框颜色 默认值：透明（仅iOS支持）</span>
+<span class="pl-s">        "</span>borderRadius<span class="pl-s">": "</span>0px<span class="pl-s">" // 其他登录按钮圆角 默认值："</span>24px<span class="pl-s">" （按钮高度的一半）</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>privacyTerms<span class="pl-s">": {</span>
+<span class="pl-s">        "</span>defaultCheckBoxState<span class="pl-s">":true, // 条款勾选框初始状态 默认值： true</span>
+<span class="pl-s">        "</span>isCenterHint<span class="pl-s">":false, //未勾选服务条款时点击登录按钮的提示是否居中显示 默认值: false (3.7.13+ 版本支持)</span>
+<span class="pl-s">        "</span>uncheckedImage<span class="pl-s">":"</span><span class="pl-s">", // 可选 条款勾选框未选中状态图片（仅支持本地图片 建议尺寸 24x24px）(3.2.0+ 版本支持)</span>
+<span class="pl-s">        "</span>checkedImage<span class="pl-s">":"</span><span class="pl-s">", // 可选 条款勾选框选中状态图片（仅支持本地图片 建议尺寸24x24px）(3.2.0+ 版本支持)</span>
+<span class="pl-s">        "</span>checkBoxSize<span class="pl-s">":12, // 可选 条款勾选框大小</span>
+<span class="pl-s">        "</span>textColor<span class="pl-s">": "</span><span class="pl-kos">#</span><span class="pl-c1">BBBBBB</span><span class="pl-s">", // 文字颜色 默认值：#BBBBBB</span>
+<span class="pl-s">        "</span>termsColor<span class="pl-s">": "</span><span class="pl-kos">#</span>5496E3<span class="pl-s">", //  协议文字颜色 默认值： #5496E3</span>
+<span class="pl-s">        "</span>prefix<span class="pl-s">": "</span>我已阅读并同意<span class="pl-s">", // 条款前的文案 默认值：“我已阅读并同意”</span>
+<span class="pl-s">        "</span>suffix<span class="pl-s">": "</span>并使用本机号码登录<span class="pl-s">", // 条款后的文案 默认值：“并使用本机号码登录”</span>
+<span class="pl-s">        "</span>privacyItems<span class="pl-s">": [  // 自定义协议条款，最大支持2个，需要同时设置url和title. 否则不生效</span>
+<span class="pl-s">            {</span>
+<span class="pl-s">                "</span>url<span class="pl-s">": "</span>https<span class="pl-kos">:</span><span class="pl-c1">/</span><span class="pl-c1">/</span><span class="pl-s">", // 点击跳转的协议详情页面</span>
+<span class="pl-s">                "</span>title<span class="pl-s">": "</span>用户服务协议<span class="pl-s">" // 协议名称</span>
+<span class="pl-s">            }</span>
+<span class="pl-s">        ]</span>
+<span class="pl-s">    },</span>
+<span class="pl-s">    "</span>buttons<span class="pl-s">": {  // 自定义页面下方按钮仅全屏模式生效（3.1.14+ 版本支持）</span>
+<span class="pl-s">        "</span>iconWidth<span class="pl-s">": "</span>45px<span class="pl-s">", // 图标宽度（高度等比例缩放） 默认值：45px</span>
+<span class="pl-s">        "</span>list<span class="pl-s">": [</span>
+<span class="pl-s">            {</span>
+<span class="pl-s">                "</span>provider<span class="pl-s">": "</span>apple<span class="pl-s">",</span>
+<span class="pl-s">                "</span>iconPath<span class="pl-s">": "</span><span class="pl-c1">/</span>static<span class="pl-c1">/</span>apple<span class="pl-kos">.</span><span class="pl-c1">png</span><span class="pl-s">" // 图标路径仅支持本地图片</span>
+<span class="pl-s">            },</span>
+<span class="pl-s">            {</span>
+<span class="pl-s">                "</span>provider<span class="pl-s">": "</span>weixin<span class="pl-s">",</span>
+<span class="pl-s">                "</span>iconPath<span class="pl-s">": "</span><span class="pl-c1">/</span>static<span class="pl-c1">/</span>wechat<span class="pl-kos">.</span><span class="pl-c1">png</span>" // 图标路径仅支持本地图片
             }
         ]
     }

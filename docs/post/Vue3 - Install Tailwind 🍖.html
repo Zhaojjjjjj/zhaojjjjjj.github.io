@@ -232,9 +232,9 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
 <h4>在 CSS 中包含 Tailwind</h4>
 <p>创建 <code class="notranslate">./src/index.css</code> 文件，并使用 <code class="notranslate">@tailwind</code> 指令来包含 Tailwind 的基础、组件和工具样式，替换原始文件内容：</p>
 <div class="highlight highlight-source-css"><pre class="notranslate"><span class="pl-c">/* ./src/index.css */</span>
-<span class="pl-k">@tailwind</span> base;
-<span class="pl-k">@tailwind</span> components;
-<span class="pl-k">@tailwind</span> utilities;</pre></div>
+<span class="pl-k">@tailwind</span> base<span class="pl-kos">;</span>
+<span class="pl-k">@tailwind</span> components<span class="pl-kos">;</span>
+<span class="pl-k">@tailwind</span> utilities<span class="pl-kos">;</span></pre></div>
 <p>Tailwind 将在构建时将这些指令替换为基于你配置的设计系统生成的所有样式。</p>
 <h4>确保 CSS 文件被导入</h4>
 <p>确保你的 CSS 文件在 <code class="notranslate">./src/main.js</code> 文件中被导入：</p>
