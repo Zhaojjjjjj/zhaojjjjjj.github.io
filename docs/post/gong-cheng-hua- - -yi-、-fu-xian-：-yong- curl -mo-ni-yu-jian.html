@@ -14,7 +14,7 @@
 <meta property="og:url" content="https://zhaojjjjjj.github.io/post/gong-cheng-hua-%20-%20-yi-%E3%80%81-fu-xian-%EF%BC%9A-yong-%20curl%20-mo-ni-yu-jian.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/102017381?v=4">
 <title>工程化 - 一、复现：用 curl 模拟预检</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet">
 
 
 <style>
@@ -191,12 +191,11 @@ a:hover .chip,.post-row:hover .chip{border-color:var(--accent-line);color:var(--
 </code></pre>
 <p><strong>预检是浏览器的"敲门"</strong>：先问服务器"我这个跨域请求行不行"，服务器说行，才发真的。注意这个顺序——<strong>预检失败，真正的请求根本不会发</strong>。所以看到 CORS 报错，先查 OPTIONS，别查 POST。</p>
 <h1>一、复现：用 curl 模拟预检</h1>
-<pre lang="bash" class="notranslate"><code class="notranslate">curl -X OPTIONS https://api.example.com/data \
-  -H "Origin: https://web.example.com" \
-  -H "Access-Control-Request-Method: POST" \
-  -H "Access-Control-Request-Headers: Content-Type,Authorization" \
-  -v
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">curl -X OPTIONS https://api.example.com/data \
+  -H <span class="pl-s"><span class="pl-pds">"</span>Origin: https://web.example.com<span class="pl-pds">"</span></span> \
+  -H <span class="pl-s"><span class="pl-pds">"</span>Access-Control-Request-Method: POST<span class="pl-pds">"</span></span> \
+  -H <span class="pl-s"><span class="pl-pds">"</span>Access-Control-Request-Headers: Content-Type,Authorization<span class="pl-pds">"</span></span> \
+  -v</pre></div>
 <p>看响应头，<strong>必须有三个</strong>：</p>
 <pre class="notranslate"><code class="notranslate">Access-Control-Allow-Origin: https://web.example.com
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE
@@ -204,23 +203,21 @@ Access-Control-Allow-Headers: Content-Type, Authorization
 </code></pre>
 <p>缺哪个，补哪个。这是 CORS 排查的起点——<strong>先离开浏览器，用 curl 看裸响应</strong>，把"浏览器行为"和"服务器行为"分开。</p>
 <h1>二、Nginx 的 <code class="notranslate">always</code>：90% 的 403 死在这里</h1>
-<pre lang="nginx" class="notranslate"><code class="notranslate">location /api/ {
-    if ($request_method = 'OPTIONS') {
-        add_header Access-Control-Allow-Origin $http_origin always;
-        add_header Access-Control-Allow-Methods 'GET, POST, PUT, DELETE, OPTIONS' always;
-        add_header Access-Control-Allow-Headers 'Content-Type, Authorization' always;
-        add_header Access-Control-Max-Age 86400 always;
-        return 204;
-    }
-    proxy_pass http://backend;
-}
-</code></pre>
+<div class="highlight highlight-source-nginx"><pre class="notranslate"><span class="pl-c1">location</span> /api/ <span class="pl-c1">{</span>
+    <span class="pl-k">if</span> <span class="pl-c1">(</span><span class="pl-v">$request_method</span> = <span class="pl-s">'OPTIONS'</span><span class="pl-c1">)</span> <span class="pl-c1">{</span>
+        <span class="pl-c1">add_header</span> Access-Control-Allow-Origin <span class="pl-v">$http_origin</span> always<span class="pl-c1">;</span>
+        <span class="pl-c1">add_header</span> Access-Control-Allow-Methods <span class="pl-s">'GET, POST, PUT, DELETE, OPTIONS'</span> always<span class="pl-c1">;</span>
+        <span class="pl-c1">add_header</span> Access-Control-Allow-Headers <span class="pl-s">'Content-Type, Authorization'</span> always<span class="pl-c1">;</span>
+        <span class="pl-c1">add_header</span> Access-Control-Max-Age <span class="pl-c1">86400</span> always<span class="pl-c1">;</span>
+        <span class="pl-k">return</span> <span class="pl-c1">204</span><span class="pl-c1">;</span>
+    <span class="pl-c1">}</span>
+    <span class="pl-c1">proxy_pass</span> <span class="pl-c1">http</span>://backend<span class="pl-c1">;</span>
+<span class="pl-c1">}</span></pre></div>
 <p><strong><code class="notranslate">always</code> 是整篇文章最重要的一个词。</strong> Nginx 的 <code class="notranslate">add_header</code> 有个反直觉的行为：默认只在 2xx/3xx 响应上加头，4xx/5xx 上不加。而预检返回的是 204——<strong>2xx，本该加的</strong>。但如果你的 <code class="notranslate">location</code> 里有别的逻辑（比如 <code class="notranslate">proxy_pass</code> 报错、auth 失败），响应变成 4xx，CORS 头就消失了，浏览器看到的就是"没有 CORS 头"→ 403。</p>
 <p><strong><code class="notranslate">always</code> 强制在所有响应上加头</strong>，不管状态码。90% 的"Nginx 配了 CORS 还是 403"，都是缺了 <code class="notranslate">always</code>。记住：<strong>CORS 头不是"配了就行"，是"每次响应都必须有"</strong>。</p>
 <h1>三、带 Cookie 的三重门</h1>
-<pre lang="javascript" class="notranslate"><code class="notranslate">// 前端：credentials: 'include'
-fetch(url, { credentials: 'include' });
-</code></pre>
+<div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// 前端：credentials: 'include'</span>
+<span class="pl-en">fetch</span><span class="pl-kos">(</span><span class="pl-s1">url</span><span class="pl-kos">,</span> <span class="pl-kos">{</span> <span class="pl-c1">credentials</span>: <span class="pl-s">'include'</span> <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
 <p>带 cookie 的跨域，要过三重门，<strong>缺一不可</strong>：</p>
 <pre class="notranslate"><code class="notranslate">1. Access-Control-Allow-Origin: https://web.example.com  ← 不能是 *！
 2. Access-Control-Allow-Credentials: true
